@@ -1,5 +1,7 @@
 """Flask routes to handle Rules"""
 import os
+from datetime import datetime
+
 from flask import Blueprint, render_template, flash, url_for, redirect, current_app, request
 from flask_login import login_required, current_user
 from hashview.models import Rules, Tasks, Jobs, JobTasks, Users
@@ -72,7 +74,7 @@ def rules_edit(rule_id):
                 return redirect(url_for('rules.rules_edit'))
             if not form.content.data:
                 flash('Rule data must be populated')
-                return redirect(url_for(rules.rules_edit()))
+                return redirect(url_for('rules.rules_edit'))
 
             # remove old rules file
             os.remove(rules.path)
@@ -85,9 +87,11 @@ def rules_edit(rule_id):
             rules.name = form.name.data
             rules.size = get_linecount(rules.path)
             rules.checksum = get_filehash(rules.path)
+            rules.last_updated = datetime.utcnow()
             db.session.commit()
 
             flash('Rules updated', 'success')
+            return redirect(url_for('rules.rules_list'))
         
     
         return render_template('rules_edit.html', title='Rules Edit', form=form, rules_name = rules.name)
