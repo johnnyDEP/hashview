@@ -52,6 +52,14 @@ def rules_add():
 def rules_edit(rule_id):
 
     rules = Rules.query.get(rule_id)
+    tasks = Tasks.query.get(rule_id=rule_id)
+    for task in tasks:
+        jobtasks = JobTasks.query.get(task_id=task.id)
+        for jobtask in jobtasks:
+            if jobtask.status == 'Queued':
+                flash('Rule is in a Tasks that is Queued for processing. Please wait for Job to be completed before editing.', 'danger')
+                return redirect(url_for('rules.rules_list'))
+
     if not rules:
         flash('Invalid Rule File')
         return redirect(url_for('rules.rules_list'))
