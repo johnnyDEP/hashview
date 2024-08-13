@@ -57,5 +57,5 @@ def hashfiles_delete(hashfile_id):
             flash('You do not have rights to delete this hashfile!', 'danger')
             return redirect(url_for('hashfiles.hashfiles_list'))
     else:
-        flash('Error in deleteing hashfile', 'danger')
+        flash('Error in deleting hashfile', 'danger')
         return redirect(url_for('hashfiles.hashfiles_list'))

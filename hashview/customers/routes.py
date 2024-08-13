@@ -18,7 +18,7 @@ def customers_list():
     customers = Customers.query.order_by(Customers.name).all()
     jobs = Jobs.query.all()
     hashfiles = Hashfiles.query.all()
-    return render_template('customers.html.j2', title='Cusomters', customers=customers, jobs=jobs, hashfiles=hashfiles)
+    return render_template('customers.html.j2', title='Customers', customers=customers, jobs=jobs, hashfiles=hashfiles)
 
 @customers.route("/customers/delete/<int:customer_id>", methods=['POST'])
 @login_required
