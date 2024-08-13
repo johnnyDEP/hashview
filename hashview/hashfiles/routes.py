@@ -31,7 +31,7 @@ def hashfiles_list():
         else:
             hash_type_dict[hashfile.id] = 'UNKNOWN'
 
-    return render_template('hashfiles.html', title='Hashfiles', hashfiles=hashfiles, customers=customers, cracked_rate=cracked_rate, jobs=jobs, hash_type_dict=hash_type_dict)
+    return render_template('hashfiles.html.j2', title='Hashfiles', hashfiles=hashfiles, customers=customers, cracked_rate=cracked_rate, jobs=jobs, hash_type_dict=hash_type_dict)
 
 @hashfiles.route("/hashfiles/delete/<int:hashfile_id>", methods=['GET', 'POST'])
 @login_required
@@ -57,5 +57,5 @@ def hashfiles_delete(hashfile_id):
             flash('You do not have rights to delete this hashfile!', 'danger')
             return redirect(url_for('hashfiles.hashfiles_list'))
     else:
-        flash('Error in deleteing hashfile', 'danger')
+        flash('Error in deleting hashfile', 'danger')
         return redirect(url_for('hashfiles.hashfiles_list'))

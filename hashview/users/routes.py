@@ -34,7 +34,7 @@ def login_get():
     """Function to present login page"""
 
     form = LoginForm()
-    return render_template('login.html', title='Login', form=form)
+    return render_template('login.html.j2', title='Login', form=form)
 
 @users.route("/login", methods=['POST'])
 def login_post():
@@ -42,7 +42,7 @@ def login_post():
 
     def failed():
         flash('Login Unsuccessful. Please check email and password', 'danger')
-        return render_template('login.html', title='Login', form=form)
+        return render_template('login.html.j2', title='Login', form=form)
 
     form = LoginForm()
     if not form.validate_on_submit():
@@ -84,7 +84,7 @@ def users_list():
     rules = Rules.query.all()
     tasks = Tasks.query.all()
     task_groups = TaskGroups.query.all()
-    return render_template('users.html', title='Users', users=users, jobs=jobs, wordlists=wordlists, rules=rules, tasks=tasks, task_groups=task_groups)
+    return render_template('users.html.j2', title='Users', users=users, jobs=jobs, wordlists=wordlists, rules=rules, tasks=tasks, task_groups=task_groups)
 
 @users.route("/users/add", methods=['GET', 'POST'])
 @login_required
@@ -103,7 +103,7 @@ def users_add():
             db.session.commit()
             flash(f'Account created for {form.email.data}!', 'success')
             return redirect(url_for('users.users_list'))
-        return render_template('users_add.html', title='User Add', form=form)
+        return render_template('users_add.html.j2', title='User Add', form=form)
     abort(403)
 
 @users.route("/users/delete/<int:user_id>", methods=['POST'])
@@ -138,7 +138,7 @@ def profile():
     elif request.method == 'GET':
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
-    return render_template('profile.html', title='Profile', form=form, current_user=current_user)
+    return render_template('profile.html.j2', title='Profile', form=form, current_user=current_user)
 
 @users.route("/profile/send_test_pushover", methods=['GET'])
 @login_required
@@ -193,7 +193,7 @@ def reset_request():
             send_email(user, subject, message)
         flash('An email has been sent to '+  form.email.data, 'info')
         return redirect(url_for('users.login_get'))
-    return render_template('reset_request.html', title='Reset Password', form=form)
+    return render_template('reset_request.html.j2', title='Reset Password', form=form)
 
 @users.route("/admin_reset_password/<int:user_id>", methods=['GET', 'POST'])
 @login_required
@@ -233,7 +233,7 @@ def reset_token(user_id :int, token :str):
 
     form = ResetPasswordForm()
     if not form.validate_on_submit():
-        return render_template('reset_token.html', title='Reset Password', form=form)
+        return render_template('reset_token.html.j2', title='Reset Password', form=form)
 
     hashed_password = bcrypt.generate_password_hash(form.password.data)
     user.password = hashed_password

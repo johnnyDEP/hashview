@@ -44,7 +44,7 @@ def searches_list():
     if results and "export" in request.form: #Export Results
         return export_results(customers, results, hashfiles, search_form.export_type.data)
 
-    return render_template('search.html', title='Search', searchForm=search_form, customers=customers, results=results, hashfiles=hashfiles )
+    return render_template('search.html.j2', title='Search', searchForm=search_form, customers=customers, results=results, hashfiles=hashfiles )
 
 #Creating this in memory instead of on disk to avoid any extra cleanup. This can be changed later if files get too large
 def export_results(customers, results, hashfiles, separator):
