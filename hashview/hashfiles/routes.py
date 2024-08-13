@@ -31,7 +31,7 @@ def hashfiles_list():
         else:
             hash_type_dict[hashfile.id] = 'UNKNOWN'
 
-    return render_template('hashfiles.html', title='Hashfiles', hashfiles=hashfiles, customers=customers, cracked_rate=cracked_rate, jobs=jobs, hash_type_dict=hash_type_dict)
+    return render_template('hashfiles.html.j2', title='Hashfiles', hashfiles=hashfiles, customers=customers, cracked_rate=cracked_rate, jobs=jobs, hash_type_dict=hash_type_dict)
 
 @hashfiles.route("/hashfiles/delete/<int:hashfile_id>", methods=['GET', 'POST'])
 @login_required

@@ -25,7 +25,7 @@ def rules_list():
     jobs = Jobs.query.all()
     jobtasks = JobTasks.query.all()
     users = Users.query.all()
-    return render_template('rules.html', title='Rules', rules=rules, tasks=tasks, jobs=jobs, jobtasks=jobtasks, users=users)
+    return render_template('rules.html.j2', title='Rules', rules=rules, tasks=tasks, jobs=jobs, jobtasks=jobtasks, users=users)
 
 @rules.route("/rules/add", methods=['GET', 'POST'])
 @login_required
@@ -45,7 +45,7 @@ def rules_add():
             db.session.commit()
             flash('Rules File created!', 'success')
             return redirect(url_for('rules.rules_list'))
-    return render_template('rules_add.html', title='Rules Add', form=form)
+    return render_template('rules_add.html.j2', title='Rules Add', form=form)
 
 @rules.route("/rules/edit/<int:rule_id>", methods=['GET', 'POST'])
 @login_required
@@ -100,10 +100,10 @@ def rules_edit(rule_id):
 
             flash('Rules updated', 'success')
             return redirect(url_for('rules.rules_list'))
-        
-    
-        return render_template('rules_edit.html', title='Rules Edit', form=form, rules_name = rules.name)
-    else:   
+
+
+        return render_template('rules_edit.html.j2', title='Rules Edit', form=form, rules_name = rules.name)
+    else:
         flash('Unauthorzed Action!', 'danger')
         return redirect(url_for('rules.rules_list'))
 

@@ -18,7 +18,7 @@ def customers_list():
     customers = Customers.query.order_by(Customers.name).all()
     jobs = Jobs.query.all()
     hashfiles = Hashfiles.query.all()
-    return render_template('customers.html', title='Cusomters', customers=customers, jobs=jobs, hashfiles=hashfiles)
+    return render_template('customers.html.j2', title='Cusomters', customers=customers, jobs=jobs, hashfiles=hashfiles)
 
 @customers.route("/customers/add", methods=['GET', 'POST'])
 @login_required

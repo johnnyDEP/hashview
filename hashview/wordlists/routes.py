@@ -18,7 +18,7 @@ def wordlists_list():
     wordlists = Wordlists.query.all()
     tasks = Tasks.query.all()
     users = Users.query.all()
-    return render_template('wordlists.html', title='Wordlists', static_wordlists=static_wordlists, dynamic_wordlists=dynamic_wordlists, wordlists=wordlists, tasks=tasks, users=users)
+    return render_template('wordlists.html.j2', title='Wordlists', static_wordlists=static_wordlists, dynamic_wordlists=dynamic_wordlists, wordlists=wordlists, tasks=tasks, users=users)
 
 @wordlists.route("/wordlists/add", methods=['GET', 'POST'])
 @login_required
@@ -41,7 +41,7 @@ def wordlists_add():
             db.session.commit()
             flash('Wordlist created!', 'success')
             return redirect(url_for('wordlists.wordlists_list'))
-    return render_template('wordlists_add.html', title='Wordlist Add', form=form)
+    return render_template('wordlists_add.html.j2', title='Wordlist Add', form=form)
 
 @wordlists.route("/wordlists/delete/<int:wordlist_id>", methods=['POST'])
 @login_required

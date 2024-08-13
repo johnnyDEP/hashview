@@ -18,7 +18,7 @@ def tasks_list():
     job_tasks = JobTasks.query.all()
     wordlists = Wordlists.query.all()
     task_groups = TaskGroups.query.all()
-    return render_template('tasks.html', title='tasks', tasks=tasks, users=users, jobs=jobs, job_tasks=job_tasks, wordlists=wordlists, task_groups=task_groups)
+    return render_template('tasks.html.j2', title='tasks', tasks=tasks, users=users, jobs=jobs, job_tasks=job_tasks, wordlists=wordlists, task_groups=task_groups)
 
 @tasks.route("/tasks/add", methods=['GET', 'POST'])
 @login_required
@@ -72,7 +72,7 @@ def tasks_add():
         else:
             flash('Attack Mode not supported... yet...', 'danger')
         return redirect(url_for('tasks.tasks_list'))
-    return render_template('tasks_add.html', title='Tasks Add', tasksForm=tasksForm)
+    return render_template('tasks_add.html.j2', title='Tasks Add', tasksForm=tasksForm)
 
 @tasks.route("/tasks/edit/<int:task_id>", methods=['GET', 'POST'])
 @login_required
@@ -81,7 +81,7 @@ def task_edit(task_id):
 
     task = Tasks.query.get(task_id)
 
-    # Check if task is currently assigned to a job. 
+    # Check if task is currently assigned to a job.
     # We probably dont care if its assigned to a task group though
     affected_jobs = JobTasks.query.filter_by(task_id=task_id).all()
     if affected_jobs:
@@ -158,7 +158,7 @@ def task_edit(task_id):
         tasksForm.rule_id.data = (task.rule_id, 'bar')
         tasksForm.mask.data = task.hc_mask
 
-        return render_template('tasks_edit.html', title='Tasks Edit', tasksForm=tasksForm, task=task, wordlists=wordlists, rules=rules)
+        return render_template('tasks_edit.html.j2', title='Tasks Edit', tasksForm=tasksForm, task=task, wordlists=wordlists, rules=rules)
 
     flash('You are unauthorized to edit this task.', 'danger')
     return redirect(url_for('tasks.tasks_list'))

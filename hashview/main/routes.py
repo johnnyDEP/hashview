@@ -37,7 +37,7 @@ def home():
     for job in jobs:
         collapse_all = collapse_all + "collapse" + str(job.id) + " "
 
-    return render_template('home.html', jobs=jobs, running_jobs=running_jobs, queued_jobs=queued_jobs, users=users, customers=customers, job_tasks=job_tasks, tasks=tasks, agents=agents, recovered_list=recovered_list, time_estimated_list=time_estimated_list, collapse_all=collapse_all)
+    return render_template('home.html.j2', jobs=jobs, running_jobs=running_jobs, queued_jobs=queued_jobs, users=users, customers=customers, job_tasks=job_tasks, tasks=tasks, agents=agents, recovered_list=recovered_list, time_estimated_list=time_estimated_list, collapse_all=collapse_all)
 
 @main.route("/job_task/stop/<int:job_task_id>")
 @login_required

@@ -384,7 +384,7 @@ def get_analytics():
                 fig8_table.append(bytes.fromhex(entry[0]).decode('latin-1'))
 
 
-    return render_template('analytics.html',
+    return render_template('analytics.html.j2',
                             title='analytics',
                             fig1_labels=fig1_labels,
                             fig1_values=fig1_values,
