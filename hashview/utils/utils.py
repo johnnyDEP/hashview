@@ -8,7 +8,7 @@ import _md5
 from flask import current_app, url_for
 import requests
 from hashview.models import db
-from hashview.models import Rules, Wordlists, Hashfiles, HashfileHashes, Hashes, Tasks, Jobs, JobTasks, JobNotifications, Users, Agents
+from hashview.models import Rules, Wordlists, Hashfiles, HashfileHashes, Hashes, Tasks, Jobs, JobTasks, JobNotifications, Users, Agents, Agents, Customers
 from flask_mail import Message
 
 
@@ -204,6 +204,9 @@ def update_dynamic_wordlist(wordlist_id):
 
     wordlist = Wordlists.query.get(wordlist_id)
     hashes = Hashes.query.filter_by(cracked=True).distinct('plaintext')
+    usernames = HashfileHashes.query.distinct('username')
+    customers = Customers.query.distinct('name');
+    
 
     # Do we delete the original file, or overwrite it?
     # if we overwrite, what happens if the new content has fewer lines than the previous file.
@@ -211,8 +214,29 @@ def update_dynamic_wordlist(wordlist_id):
     # is there a file lock on a wordlist when in use by hashcat? Could we just create a temp file and replace after generation?
     # Open file
     file = open(wordlist.path, 'wt')
-    for entry in hashes:
-        file.write(str(bytes.fromhex(entry.plaintext).decode('latin-1')) + '\n')
+    if 'Hashes' in wordlist.name:
+        for entry in hashes:
+            file.write(str(bytes.fromhex(entry.plaintext).decode('latin-1')) + '\n')
+    elif 'Usernames' in wordlist.name:
+        username_set = set()
+        for entry in usernames:
+            if entry.username:
+                username_string = str(bytes.fromhex(entry.username).decode('latin-1'))
+                if '\\' in username_string:
+                    username_set.add(username_string.split('\\')[0])
+                    username_set.add(username_string.split('\\')[1])
+                    username_set.add(username_string)
+                else:
+                    username_set.add(username_string)
+        for entry in username_set:
+            file.write(entry + '\n')
+    elif 'Customers' in wordlist.name:
+        customer_set = set()
+        for entry in customers:
+            customer_set.add(entry.name.lower())
+        for entry in customer_set:
+            file.write(entry + '\n')
+
     file.close()
 
     # update line count
