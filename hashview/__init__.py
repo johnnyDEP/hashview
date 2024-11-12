@@ -97,13 +97,13 @@ def setup_defaults_if_needed():
         logger.exception('Adding Admin User failed.')
 
     try:
-        from hashview.setup import add_default_dynamic_wordlist
-        from hashview.setup import default_dynamic_wordlist_need_added
-        if default_dynamic_wordlist_need_added(db):
+        from hashview.setup import add_default_dynamic_wordlists
+        from hashview.setup import default_dynamic_wordlists_need_added
+        if default_dynamic_wordlists_need_added(db):
             logger.info('Adding Default Dynamic Wordlist.')
-            add_default_dynamic_wordlist(db)
+            add_default_dynamic_wordlists(db)
     except:
-        logger.exception('Adding Default Dynamic Wordlist failed.')
+        logger.exception('Adding Default Dynamic Wordlists failed.')
 
     try:
         from hashview.setup import add_default_static_wordlist
