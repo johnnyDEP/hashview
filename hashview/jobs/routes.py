@@ -176,7 +176,14 @@ def jobs_assigned_hashfile(job_id):
         for error in jobs_new_hashfile_form.submit.errors:
             print(str(error))
 
-    return render_template('jobs_assigned_hashfiles.html.j2', title='Jobs Assigned Hashfiles', hashfiles=hashfiles, job=job, jobs_new_hashfile_form=jobs_new_hashfile_form, hashfile_cracked_rate=hashfile_cracked_rate)
+    return render_template(
+        'jobs_assigned_hashfiles.html.j2',
+        title                  = 'Jobs Assigned Hashfiles',
+        hashfiles              = hashfiles,
+        job                    = job,
+        jobs_new_hashfile_form = jobs_new_hashfile_form,
+        hashfile_cracked_rate  = hashfile_cracked_rate,
+    )
 
 @jobs.route("/jobs/<int:job_id>/assigned_hashfile/<int:hashfile_id>", methods=['GET'])
 @login_required
