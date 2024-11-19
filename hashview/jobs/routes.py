@@ -17,13 +17,26 @@ jobs = Blueprint('jobs', __name__)
 @login_required
 def jobs_list():
     """Function to return list of Jobs"""
-    jobs = Jobs.query.order_by(Jobs.created_at.desc()).all()
-    customers = Customers.query.all()
-    users = Users.query.all()
-    hashfiles = Hashfiles.query.all()
+    jobs      = Jobs.query.order_by(Jobs.created_at.desc()).all()
     job_tasks = JobTasks.query.all()
-    tasks = Tasks.query.all()
-    return render_template('jobs.html.j2', title='Jobs', jobs=jobs, customers=customers, users=users, hashfiles=hashfiles, job_tasks=job_tasks, tasks=tasks)
+    tasks     = Tasks.query.all()
+    return render_template(
+        'jobs.html.j2',
+        title               = 'Jobs',
+        jobs                = jobs,
+        customer_name_by_id = { c.id: c.name for c in Customers.query.all() },
+        hashfile_name_by_id = { h.id: h.name for h in Hashfiles.query.all() },
+        user_fullname_by_id = {
+            u.id: f'{u.first_name} {u.last_name}' for u in Users.query.all()
+        },
+        task_names_by_job_id = {
+            job.id: [
+                task.name
+                    for job_task in job_tasks if (job.id == job_task.job_id)
+                for task in tasks if (job_task.task_id == task.id)
+            ] for job in jobs
+        },
+    )
 
 @jobs.route("/jobs/add", methods=['GET', 'POST'])
 @login_required
