@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, abort, flash, url_for, current_app, request
 from flask_login import login_required, current_user
-from sqlalchemy.sql.elements import Null
+from sqlalchemy import func
 from hashview.jobs.forms import JobsForm, JobsNewHashFileForm, JobsNotificationsForm, JobSummaryForm
 from hashview.models import HashNotifications, JobNotifications, Jobs, Customers, Hashfiles, Users, HashfileHashes, Hashes, JobTasks, Tasks, TaskGroups, Settings
 from hashview.utils.utils import save_file, get_filehash, import_hashfilehashes, build_hashcat_command, validate_pwdump_hashfile, validate_netntlm_hashfile, validate_kerberos_hashfile, validate_shadow_hashfile, validate_user_hash_hashfile, validate_hash_only_hashfile
@@ -76,9 +76,11 @@ def jobs_assigned_hashfile(job_id):
     if jobsNewHashFileForm.validate_on_submit():
 
         hashfile_path = ""
+        hashfile_name = ""
         if jobsNewHashFileForm.hashfile.data:
             # User submitted a file upload
             hashfile_path = os.path.join(current_app.root_path, save_file('control/tmp', jobsNewHashFileForm.hashfile.data))
+            hashfile_name = jobsNewHashFileForm.hashfile.data.filename
         elif jobsNewHashFileForm.hashfilehashes.data:
             # User submitted copied/pasted hashes
             # Going to have to save a file manually instead of using save_file since save_file requires form data to be passed and we're not collecting that object for this tab
@@ -86,6 +88,8 @@ def jobs_assigned_hashfile(job_id):
             if len(jobsNewHashFileForm.name.data) == 0:
                 flash('You must assign a name to the hashfile', 'danger')
                 return redirect(url_for('jobs.jobs_assigned_hashfile', job_id=job_id))
+            else:
+                hashfile_name = jobsNewHashFileForm.name.data
 
             random_hex = secrets.token_hex(8)
             hashfile_path = 'hashview/control/tmp/' + random_hex
@@ -119,7 +123,7 @@ def jobs_assigned_hashfile(job_id):
                 flash(has_problem, 'danger')
                 return redirect(url_for('jobs.jobs_assigned_hashfile', job_id=job_id))
             else:
-                hashfile = Hashfiles(name=jobsNewHashFileForm.hashfile.data.filename, customer_id=job.customer_id, owner_id=current_user.id)
+                hashfile = Hashfiles(name=hashfile_name, customer_id=job.customer_id, owner_id=current_user.id)
                 db.session.add(hashfile)
                 db.session.commit()
 
@@ -187,7 +191,7 @@ def jobs_list_tasks(job_id):
 
 @jobs.route("/jobs/<int:job_id>/assign_task/<int:task_id>", methods=['GET'])
 @login_required
-def jobs_assigned_task(job_id, task_id):
+def jobs_assign_task(job_id, task_id):
 
     exists = JobTasks.query.filter_by(job_id=job_id, task_id=task_id).first()
     if exists:
@@ -202,7 +206,6 @@ def jobs_assigned_task(job_id, task_id):
 @jobs.route("/jobs/<int:job_id>/assign_task_group/<int:task_group_id>", methods=['GET'])
 @login_required
 def jobs_assign_task_group(job_id, task_group_id):
-    job = Jobs.query.get(job_id)
     task_group = TaskGroups.query.get(task_group_id)
 
     for task_group_entry in json.loads(task_group.tasks):
@@ -210,6 +213,41 @@ def jobs_assign_task_group(job_id, task_group_id):
         db.session.add(job_task)
         db.session.commit()
 
+    return redirect("/jobs/" + str(job_id) + "/tasks")
+
+@jobs.route("/jobs/<int:job_id>/assign_task/lucky", methods=['GET'])
+@login_required
+def jobs_assign_lucky_task_group(job_id):
+
+    job = Jobs.query.get(job_id)
+    hashfile = Hashfiles.query.get(job.hashfile_id)
+    hashfile_hashes = HashfileHashes.query.filter_by(hashfile_id=hashfile.id).first()
+    hash = Hashes.query.get(hashfile_hashes.hash_id)
+
+
+    # Get top 10 effective tasks
+    most_effective_tasks_raw = db.session.query(func.count(Hashes.id).label("row_count"), Hashes.task_id, Tasks.name,).join(Tasks, Hashes.task_id == Tasks.id) \
+        .filter(Hashes.cracked == '1') \
+        .filter(Hashes.task_id is not None) \
+        .filter(Hashes.task_id != '0') \
+        .filter(Hashes.hash_type == hash.hash_type) \
+        .group_by(Hashes.task_id) \
+        .order_by(func.count(Hashes.id).desc()) \
+        .limit(10) \
+        .all()
+
+    if len(most_effective_tasks_raw) == 0:
+        flash('Not enough data to generate top tasks.', 'danger')
+    else:
+    # for each effective task 
+        for entry in most_effective_tasks_raw:
+            job_tasks = JobTasks.query.filter_by(job_id=job_id).all()
+            if entry.task_id not in {job_task.task_id for job_task in job_tasks}:
+                job_task = JobTasks(job_id=job_id, task_id=entry.task_id, status='Not Started')
+                db.session.add(job_task)
+                db.session.commit()
+
+    flash('Successfully Added Top 10 Tasks', 'success')
     return redirect("/jobs/" + str(job_id) + "/tasks")
 
 @jobs.route("/jobs/<int:job_id>/move_task_up/<int:task_id>", methods=['GET'])
@@ -410,7 +448,7 @@ def jobs_summary(job_id):
         job.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         db.session.commit()
 
-        flash('Job successfully created', 'sucess')
+        flash('Job successfully created', 'success')
 
         return redirect(url_for('jobs.jobs_list'))
     else:

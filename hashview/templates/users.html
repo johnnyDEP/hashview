@@ -4,7 +4,6 @@
 <h1>Users</h1>
 <br>
 These are the awesome people that use Hashview.
-<a class="btn btn-success btn-sm mt-1 mb-1" href="{{ url_for('users.users_add') }}">Add</a>
 <br>
 <br>
 <br>
@@ -12,46 +11,54 @@ These are the awesome people that use Hashview.
 {% block content %}
     <article class="media content-section">
         <div class="media-body">
-            <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">First</th>
-                    <th scope="col">Last</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Last Login</th>
-                    <th scope="col">Control</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
+            <div class="card">
+                <h4 class="card-header">
+                    Users 
+                    <a class="btn btn-success btn-sm mt-1 mb-1 pull-right" href="{{ url_for('users.users_add') }}">Add</a>
+                </h4>
+                <div class="card-body ">  
+                    <table class="table table-sm">
+                        <thead>
                         <tr>
-                            <td>{{ user.first_name }}</td>
-                            <td>{{ user.last_name }}</td>
-                            <td>{{ user.email_address }}</td>
-                            <td>
-                                {% if user.admin %}
-                                    Admin
-                                {% else %}
-                                    User
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if user.last_login_utc %}
-                                        {{ user.last_login_utc.strftime('%a, %b. %d %Y %I:%M:%S %Z') }}
-                                {% else %}
-                                        <i>Never</i>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button type="button" class="fa fa-info btn btn-info" data-toggle="modal" data-target="#infoModal{{user.id}}" title=Info></button>
-                                <button type="button" class="fa fa-undo btn btn-warning" data-toggle="modal" data-target="#resetModal{{user.id}}" title='Reset Password'></button>
-                                <button type="button" class="fa fa-trash btn btn-danger" data-toggle="modal" data-target="#deleteModal{{user.id}}" title=Delete></button>
-                            </td>
+                            <th scope="col">First</th>
+                            <th scope="col">Last</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Role</th>
+                            <th scope="col">Last Login</th>
+                            <th scope="col">Control</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-              </table>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td>{{ user.first_name }}</td>
+                                    <td>{{ user.last_name }}</td>
+                                    <td>{{ user.email_address }}</td>
+                                    <td>
+                                        {% if user.admin %}
+                                            Admin
+                                        {% else %}
+                                            User
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.last_login_utc %}
+                                                {{ user.last_login_utc.strftime('%a, %b. %d %Y %I:%M:%S %Z') }}
+                                        {% else %}
+                                                <i>Never</i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="fa fa-info btn btn-info" data-toggle="modal" data-target="#infoModal{{user.id}}" title=Info></button>
+                                        <button type="button" class="fa fa-undo btn btn-warning" data-toggle="modal" data-target="#resetModal{{user.id}}" title='Reset Password'></button>
+                                        <button type="button" class="fa fa-trash btn btn-danger" data-toggle="modal" data-target="#deleteModal{{user.id}}" title=Delete></button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </article>
     {% for user in users %}

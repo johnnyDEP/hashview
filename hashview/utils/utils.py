@@ -5,7 +5,7 @@ import _md5
 import re
 from datetime import datetime
 from hashview.models import db
-from hashview.models import Rules, Wordlists, Hashfiles, HashfileHashes, Hashes, Tasks, Jobs, JobTasks, JobNotifications, Users, Agents
+from hashview.models import Rules, Wordlists, Hashfiles, HashfileHashes, Hashes, Tasks, Jobs, JobTasks, JobNotifications, Users, Agents, Customers
 from flask_mail import Message
 from flask import current_app, url_for
 import requests
@@ -38,6 +38,14 @@ def get_filehash(filepath):
         for byte_block in iter(lambda: f.read(4096),b""):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
+
+def notify_admins(subject, message):
+    users = Users.query.filter_by(admin=True).all()
+
+    for user in users:
+        if user.pushover_app_id and user.pushover_user_key:
+            send_pushover(user, subject, message)
+        send_email(user, subject, message)
 
 def send_email(user, subject, message):
     msg = Message(subject, recipients=[user.email_address])
@@ -104,21 +112,37 @@ def import_hashfilehashes(hashfile_id, hashfile_path, file_type, hash_type):
     # for line in file,
     for line in lines:
         # If line is empty:
+        username = None
         if len(line) > 0:
             if file_type == 'hash_only':
                 # forcing lower casing of hash as hashcat will return lower cased version of the has and we want to match what we imported.
-                if hash_type == '300':
+                if hash_type == '300' or hash_type == '1731':
                     hash_id = import_hash_only(line=line.lower().rstrip(), hash_type=hash_type)
+                elif hash_type == '2100':
+                    line = line.lower().rstrip()
+                    line = line.replace('$dcc2$', '$DCC2$')
+                    hash_id = import_hash_only(line, hash_type)
                 else:
                     hash_id = import_hash_only(line=line.rstrip(), hash_type=hash_type)
+                # extract username from dcc2 hash
                 if hash_type == '2100':
                     username = line.split('#')[1]
                 else:
                     username = None
             elif file_type == 'user_hash':
                 if ':' in line:
-                    hash_id = import_hash_only(line=line.split(':',1)[1].rstrip(), hash_type=hash_type)
-                    username = line.split(':')[0]
+                    if hash_type == '300' or hash_type == '1731':
+                        hash_id = import_hash_only(line=line.lower().rstrip(), hash_type=hash_type)
+                        username = line.split(':')[0]
+                    elif hash_type == '2100':
+                        line = line.split(':',1)[1].rstrip()
+                        line = line.lower()
+                        line = line.replace('$dcc2$', '$DCC2$')
+                        hash_id = import_hash_only(line, hash_type)
+                        username = line.split(':')[0]
+                    else:
+                        hash_id = import_hash_only(line=line.split(':',1)[1].rstrip(), hash_type=hash_type)
+                        username = line.split(':')[0]
                 else:
                     return False
             elif file_type == 'shadow':
@@ -171,6 +195,8 @@ def import_hashfilehashes(hashfile_id, hashfile_path, file_type, hash_type):
 def update_dynamic_wordlist(wordlist_id):
     wordlist = Wordlists.query.get(wordlist_id)
     hashes = Hashes.query.filter_by(cracked=True).distinct('plaintext')
+    usernames = HashfileHashes.query.distinct('username')
+    customers = Customers.query.distinct('name');
 
     # Do we delete the original file, or overwrite it?
     # if we overwrite, what happens if the new content has fewer lines than the previous file.
@@ -178,8 +204,32 @@ def update_dynamic_wordlist(wordlist_id):
     # is there a file lock on a wordlist when in use by hashcat? Could we just create a temp file and replace after generation?
     # Open file
     file = open(wordlist.path, 'wt')
-    for entry in hashes:
-        file.write(str(bytes.fromhex(entry.plaintext).decode('latin-1')) + '\n')
+    if 'Hashes' in wordlist.name:
+        for entry in hashes:
+            file.write(str(bytes.fromhex(entry.plaintext).decode('latin-1')) + '\n')
+    elif 'Usernames' in wordlist.name:
+        username_set = set()
+        for entry in usernames:
+            if entry.username:
+                username_string = str(bytes.fromhex(entry.username).decode('latin-1'))
+                if '\\' in username_string:
+                    #print(username_string)
+                    #print(username_string.split('\\')[0])
+                    #print(username_string.split('\\')[1])
+                    username_set.add(username_string.split('\\')[0])
+                    username_set.add(username_string.split('\\')[1])
+                    username_set.add(username_string)
+                else:
+                    username_set.add(username_string)
+                    #print(username_string)
+        for entry in username_set:
+            file.write(entry + '\n')
+    elif 'Customers' in wordlist.name:
+        customer_set = set()
+        for entry in customers:
+            customer_set.add(entry.name.lower())
+        for entry in customer_set:
+            file.write(entry + '\n')
     file.close()
 
     # update line count
@@ -202,10 +252,13 @@ def build_hashcat_command(job_id, task_id):
     attackmode = task.hc_attackmode
     mask = task.hc_mask
 
-    if attackmode == 'combinator':
-        print('unsupported combinator')
-    else:
-        wordlist = Wordlists.query.get(task.wl_id)
+    # Combinator
+    wordlist = Wordlists.query.get(task.wl_id)
+    # if attackmode == 1:
+        
+    #     print('unsupported combinator')
+    # else:
+    #     wordlist = Wordlists.query.get(task.wl_id)
 
     target_file = 'control/hashes/hashfile_' + str(job.id) + '_' + str(task.id) + '.txt'
     crack_file = 'control/outfiles/hc_cracked_' + str(job.id) + '_' + str(task.id) + '.txt'
@@ -213,6 +266,14 @@ def build_hashcat_command(job_id, task_id):
         relative_wordlist_path = 'control/wordlists/' + wordlist.path.split('/')[-1]
     else:
         relative_wordlist_path = ''
+    
+    if attackmode == 1:
+        wordlist_2 = Wordlists.query.get(task.wl_id_2)
+        if wordlist_2:
+            relative_wordlist_2_path = 'control/wordlists/' + wordlist.path.split('/')[-1]
+        else:
+            relative_wordlist_2_path = ''
+
     if rules_file:
         relative_rules_path = 'control/rules/' + rules_file.path.split('/')[-1]
     else:
@@ -220,17 +281,55 @@ def build_hashcat_command(job_id, task_id):
 
     session = secrets.token_hex(4)
 
-    if attackmode == 'bruteforce':
-        cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -a 3 ' + target_file
-    elif attackmode == 'maskmode':
-        cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -a 3 ' + target_file + ' ' + mask
-    elif attackmode == 'dictionary':
+    # Build cmd
+    cmd = hc_binpath
+    cmd += ' -O -w 3'
+    cmd += ' --session ' + session
+    cmd += ' -m ' + str(hash_type)
+    cmd += ' --potfile-disable'
+    cmd += ' --status --status-timer=15'
+    cmd += ' --outfile-format 1,3'
+    cmd += ' --outfile ' + crack_file
+
+    # Dictionary with optional rules
+    if attackmode == 0:
         if isinstance(task.rule_id, int):
-            cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -r ' + relative_rules_path + ' ' + target_file + ' ' + relative_wordlist_path
+            cmd += ' -r ' + relative_rules_path + ' ' + target_file + ' ' + relative_wordlist_path
         else:
-            cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + target_file + ' ' + relative_wordlist_path
-    elif attackmode == 'combinator':
-      cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -a 1 ' + target_file + ' ' + wordlist_one.path + ' ' + ' ' + wordlist_two.path + ' ' + relative_rules_path
+            cmd += ' ' + target_file + ' ' + relative_wordlist_path
+    # combinator
+    elif attackmode == 1:
+        if isinstance(task.j_rule, str):
+            j_rule = " -j '" + task.j_rule + "' "
+        else:
+            j_rule = ' '
+        
+        if isinstance(task.k_rule, str):
+            k_rule = " -k '" + task.k_rule + "' "
+        else:
+            k_rule = ' '
+        cmd += ' ' + ' -a 1 ' + target_file + ' ' + relative_wordlist_path + j_rule + relative_wordlist_path + k_rule
+    # maskmode
+    elif attackmode == 3:
+        cmd += ' ' + ' -a 3 ' + target_file + ' ' + mask
+    # Hybrid (Wordlist + Mask)
+    elif attackmode == 6:
+        cmd += ' ' + ' -a 6 ' + target_file + ' ' + relative_wordlist_path + ' ' + mask
+    elif attackmode == 7:
+        cmd += ' ' + ' -a 7 ' + target_file + ' ' + mask + ' ' + relative_wordlist_path
+
+    # Mask mode
+    #if attackmode == 'bruteforce':
+    #    cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -a 3 ' + target_file
+    # elif attackmode == 'maskmode':
+    #     cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -a 3 ' + target_file + ' ' + mask
+    # elif attackmode == 'dictionary':
+    #     if isinstance(task.rule_id, int):
+    #         cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -r ' + relative_rules_path + ' ' + target_file + ' ' + relative_wordlist_path
+    #     else:
+    #         cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + target_file + ' ' + relative_wordlist_path
+    # elif attackmode == 'combinator':
+    #   cmd = hc_binpath + ' -O -w 3 ' + ' --session ' + session + ' -m ' + str(hash_type) + ' --potfile-disable' + ' --status --status-timer=15' + ' --outfile-format 1,3' + ' --outfile ' + crack_file + ' ' + ' -a 1 ' + target_file + ' ' + wordlist_one.path + ' ' + ' ' + wordlist_two.path + ' ' + relative_rules_path
 
     return cmd
 
@@ -552,8 +651,8 @@ def validate_hash_only_hashfile(hashfile_path, hash_type):
                 if dollar_cnt != 3:
                     return 'Error line ' + str(line_number) + '. Doesnt appear to be of the type: bcrypt'
             if hash_type == '5700':
-                if len(line.rstrip()) != 45:
-                    return 'Error line ' + str(line_number) + ' has an invalid number of characters (' + str(len(line.rstrip())) + ') should be 45'   
+                if len(line.rstrip()) != 43:
+                    return 'Error line ' + str(line_number) + ' has an invalid number of characters (' + str(len(line.rstrip())) + ') should be 43'   
             if hash_type == '7100':
                 if '$' not in line:
                     return 'Error line ' + str(line_number) + ' is missing a $ character. Mac OSX 10.8+ ($ml$) hashes should have these.'
@@ -563,6 +662,17 @@ def validate_hash_only_hashfile(hashfile_path, hash_type):
                         dollar_cnt += 1
                 if dollar_cnt != 2:
                     return 'Error line ' + str(line_number) + '. Doesnt appear to be of the type: Mac OSX 10.8+ ($ml$)'
+            if hash_type == '9400' or hash_type == '9500' or hash_type == '9600':
+                if '$' not in line:
+                    return 'Error line ' + str(line_number) + ' is missing a $ character. Office hashes require 2.'
+                if '*' not in line:
+                    return 'Error line ' + str(line_number) + ' is missing a * character. Office hashes require 6.'
+                star_cnt = 0
+                for char in line:
+                    if char == '*':
+                        star_cnt +=1
+                if star_cnt != 7:
+                    return 'Error line ' + str(line_number) + '. Does not appear to be of the type office.'
 
     return False
 

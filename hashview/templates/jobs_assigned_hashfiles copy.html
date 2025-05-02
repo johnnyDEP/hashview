@@ -54,11 +54,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
     }
     function showHashFileSubmit(){
         document.getElementById('hashfile_div').style.display = 'inline';
-    } 
-    function auto_grow(element) {
-        element.style.height = "5px";
-        element.style.height = (element.scrollHeight) + "px";
-    }  
+    }   
 </script>
 <nav>
     <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -176,13 +172,14 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                         <br>
                         <br>
                         <label class="form-control-label" for="hash_type">Hash File Content</label>
-                        <nav>
-                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                                <a class="nav-link active" id="pills-home-tab" data-toggle="tab" href="#pills-home" role="tab" aria-controls="pills-home" aria-selected="true">Individual Hashes</a>
-                                <a class="nav-link" id="pills-profile-tab" data-toggle="tab" href="#pills-profile" role="tab" aria-controls="pills-profile" aria-selected="false">Upload File</a>
-                            </div>
-                        </nav>
-                        <br>
+                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="pills-home-tab" data-toggle="pill" href="#pills-home" role="tab" aria-controls="pills-home" aria-selected="true">Individual Hashes</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#pills-profile" role="tab" aria-controls="pills-profile" aria-selected="false">File Upload</a>
+                            </li>
+                        </ul>
                         <!-- Copy / Paste -->
                         <div class="tab-content" id="pills-tabContent">
                             <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
@@ -211,7 +208,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                                             {% endfor %}
                                         </div>
                                     {% else %}
-                                        {{ jobsNewHashFileForm.hashfilehashes(class="form-control form-control-lg", onchange="showHashFileSubmit()", oninput="auto_grow(this)") }}
+                                        {{ jobsNewHashFileForm.hashfilehashes(class="form-control form-control-lg", onchange="showHashFileSubmit()") }}
                                     {% endif %}
                                 </div>
                             </div>

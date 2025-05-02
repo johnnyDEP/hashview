@@ -15,6 +15,7 @@ def searches_list():
     customers = Customers.query.all()
     hashfiles = Hashfiles.query.all()
     searchForm = SearchForm()
+    redacted_data = False
     # TODO
     # We should be able to include Customers and Hashfiles in the following queries
     if searchForm.validate_on_submit():
@@ -32,6 +33,9 @@ def searches_list():
         if(results.first()): #Without a value in the search input the export button will not pass the form validation
             searchForm.query.data = results.first()[0].ciphertext #All hashs should be the same, so set the search input as the first rows hash value
             searchForm.search_type.data = 'hash' #Set the search type to hash
+        else:
+            results = db.session.query(Hashes).filter(Hashes.id == request.args.get("hash_id")).all() #This is a hack to get the hash id to show up in the result
+            redacted_data = True #This is a hack to get the hash id to show up in the result            
     else:
         customers = None
         results = None
@@ -41,7 +45,7 @@ def searches_list():
     if results and "export" in request.form: #Export Results
         return export_results(customers, results, hashfiles, searchForm.export_type.data)
 
-    return render_template('search.html', title='Search', searchForm=searchForm, customers=customers, results=results, hashfiles=hashfiles )
+    return render_template('search.html', title='Search', searchForm=searchForm, customers=customers, results=results, hashfiles=hashfiles, redacted_data=redacted_data)
 
 #Creating this in memory instead of on disk to avoid any extra cleanup. This can be changed later if files get too large
 def export_results(customers, results, hashfiles, separator):
@@ -52,7 +56,7 @@ def export_results(customers, results, hashfiles, separator):
     byteIO.write(strIO.getvalue().encode())
     byteIO.seek(0)
     strIO.close()
-    return send_file(byteIO, attachment_filename="search.txt", as_attachment=True)
+    return send_file(byteIO, download_name="search.txt", as_attachment=True)
 
 #If this logic changes on in the html (search.html) it will need to change here as well
 def get_rows(strIO, customers, results, hashfiles, separator):

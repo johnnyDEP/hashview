@@ -35,7 +35,7 @@ def ensure_flask_bcrypt():
             raise Exception('old version')
     except:
         print('\nPlease make sure that your dependencies are up to date (including replacing Flask-Bcrypt with Bcrypt-Flask).')
-        exit(1)
+        #exit(1)
 
 
 def ensure_admin_account(db, bcrypt):
@@ -119,7 +119,7 @@ def ensure_dynamic_wordlist(db):
     from hashview.models import Wordlists
     from hashview.utils.utils import get_filehash
 
-    dynamic_wordlist_count = Wordlists.query.filter_by(type='dynamic').filter_by(name='All Recovered Hashes').count()
+    dynamic_wordlist_count = Wordlists.query.filter_by(type='dynamic').filter_by(name='(DYNAMIC) All Recovered Hashes').count()
     if (0 < dynamic_wordlist_count):
         print(f'✓ Dynamic Wordlist exist in database. Count({dynamic_wordlist_count})')
         return
@@ -131,7 +131,7 @@ def ensure_dynamic_wordlist(db):
             # 'w' => open for writing, truncating the file first
             pass
         wordlist = Wordlists(
-            name     = 'All Recovered Hashes',
+            name     = '(DYNAMIC) All Recovered Hashes',
             owner_id = '1',
             type     = 'dynamic',
             path     = wordlist_path,               # Can we make this a relative path?
