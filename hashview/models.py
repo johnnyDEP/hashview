@@ -1,3 +1,4 @@
+"""Class file to manage loading of database"""
 import json
 
 from hashlib import sha512
@@ -13,21 +14,23 @@ db = SQLAlchemy()
 
 
 class Users(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(20), nullable=False)
-    last_name = db.Column(db.String(20), nullable=False)
-    email_address = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-    admin = db.Column(db.Boolean, nullable=False, default=False)
-    pushover_app_id = db.Column(db.String(50), nullable=True)
+    """Class object to represent Users"""
+
+    id                = db.Column(db.Integer,    nullable=False, primary_key=True)
+    first_name        = db.Column(db.String(20), nullable=False)
+    last_name         = db.Column(db.String(20), nullable=False)
+    email_address     = db.Column(db.String(50), nullable=False, unique=True)
+    password          = db.Column(db.String(60), nullable=False)
+    admin             = db.Column(db.Boolean,    nullable=False, default=False)
+    pushover_app_id   = db.Column(db.String(50), nullable=True)
     pushover_user_key = db.Column(db.String(50), nullable=True)
-    last_login_utc = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
-    api_key = db.Column(db.String(60), nullable=True)
-    wordlists = db.relationship('Wordlists', backref='tbd', lazy=True)
-    rules = db.relationship('Rules', backref='owner', lazy=True)
-    jobs = db.relationship('Jobs', backref='owner', lazy=True)
-    tasks = db.relationship('Tasks', backref='owner', lazy=True)
-    taskgroups = db.relationship('TaskGroups', backref='owner', lazy=True)
+    last_login_utc    = db.Column(db.DateTime,   nullable=True,  default=datetime.utcnow)
+    api_key           = db.Column(db.String(60), nullable=True)
+    wordlists         = db.relationship('Wordlists',  backref='tbd',   lazy=True)
+    rules             = db.relationship('Rules',      backref='owner', lazy=True)
+    jobs              = db.relationship('Jobs',       backref='owner', lazy=True)
+    tasks             = db.relationship('Tasks',      backref='owner', lazy=True)
+    taskgroups        = db.relationship('TaskGroups', backref='owner', lazy=True)
 
     def _get_reset_token_salt(self) -> str:
         """
@@ -51,6 +54,8 @@ class Users(db.Model, UserMixin):
         return key_bytes
 
     def get_reset_token(self, expires_sec:int=1800):
+        """Class function to get reset token"""
+
         header = dict(alg='HS512')
 
         issued_at = int(datetime.today().timestamp())
@@ -68,7 +73,9 @@ class Users(db.Model, UserMixin):
         return token_string
 
     def verify_reset_token(self, token_string :str) -> 'Users':
-        if (not token_string):
+        """Class function to verify reset token"""
+
+        if not token_string:
             return False
 
         try:
@@ -92,10 +99,11 @@ class Users(db.Model, UserMixin):
         if self.id != payload.get('user_id'):
             return False
 
-        else:
-            return True
+        return True
 
 class Settings(db.Model):
+    """Class object to represent Settings"""
+
     id = db.Column(db.Integer, primary_key=True)
     retention_period = db.Column(db.Integer)
     max_runtime_jobs = db.Column(db.Integer)                    # Time will be measured in hours
@@ -103,6 +111,8 @@ class Settings(db.Model):
     enabled_job_weights = db.Column(db.Boolean, nullable=False, default=False)
 
 class Jobs(db.Model):
+    """Class object to represent Jobs"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     priority = db.Column(db.Integer, nullable=False, default=3) # 5 = highest priority. 1 = lowest priority
@@ -117,6 +127,8 @@ class Jobs(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
 class JobTasks(db.Model):
+    """Class object to represent JobTasks"""
+
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, nullable=False)
     task_id = db.Column(db.Integer, nullable=False)
@@ -127,10 +139,14 @@ class JobTasks(db.Model):
     agent_id = db.Column(db.Integer, db.ForeignKey('agents.id'))
 
 class Customers(db.Model):
+    """Class object to represent Customers"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(40), nullable=False)
 
 class Hashfiles(db.Model):
+    """Class object to represent Hashfiles"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256), nullable=False)        # can probably be reduced
     uploaded_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -139,12 +155,16 @@ class Hashfiles(db.Model):
     owner_id = db.Column(db.Integer, nullable=False)
 
 class HashfileHashes(db.Model):
+    """Class object to represent HashfileHashes"""
+
     id = db.Column(db.Integer, primary_key=True)
     hash_id = db.Column(db.Integer, nullable=False, index=True)
     username = db.Column(db.String(256), nullable=True, default=None, index=True)
     hashfile_id = db.Column(db.Integer, nullable=False)
 
 class Agents(db.Model):
+    """Class object to represent Agents"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)         # can probably be reduced
     src_ip = db.Column(db.String(15), nullable=False)
@@ -166,6 +186,8 @@ class Rules(db.Model):
     checksum = db.Column(db.String(64), nullable=False)
 
 class Wordlists(db.Model):
+    """Class object to represent Wordlists"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256), nullable=False)
     last_updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -176,6 +198,8 @@ class Wordlists(db.Model):
     checksum = db.Column(db.String(64), nullable=False)
 
 class Tasks(db.Model):
+    """Class object to represent Tasks"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     hc_attackmode = db.Column(db.String(25), nullable=False) # 0, 1, 3, 6, 7 
@@ -188,12 +212,16 @@ class Tasks(db.Model):
     hc_mask = db.Column(db.String(50))
 
 class TaskGroups(db.Model):
+    """Class object to represent TaskGroups"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     tasks = db.Column(db.String(256), nullable=False)
 
 class Hashes(db.Model):
+    """Class object to represent Hashes"""
+
     id = db.Column(db.Integer, primary_key=True)
     sub_ciphertext = db.Column(db.String(32), nullable=False, index=True)
     ciphertext = db.Column(db.String(16383), nullable=False) # Setting this to max value for now. If we run into this being a limitation in the future we can revisit changing thist to TEXT or BLOB. https://sheeri.org/max-varchar-size/
@@ -205,12 +233,16 @@ class Hashes(db.Model):
     plaintext = db.Column(db.String(256), index=True)
 
 class JobNotifications(db.Model):
+    """Class object to represent JobNotifications"""
+
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, nullable=False)
     job_id = db.Column(db.Integer, nullable=False)
     method = db.Column(db.String(6), nullable=False)    # email, push
 
 class HashNotifications(db.Model):
+    """Class object to represent HashNotification"""
+
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, nullable=False)
     hash_id = db.Column(db.Integer, nullable=False)

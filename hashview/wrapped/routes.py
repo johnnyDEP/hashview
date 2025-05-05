@@ -331,7 +331,7 @@ def wrapped_list():
     # Total hash_types recovered all
     # select COUNT(id),hash_type from hashes where cracked = '1' and recovered_at > '2025-01-01' group by hash_type order by count(id) DESC limit 10;
 
-    return render_template('wrapped.html', title='Hashview Wrapped', 
+    return render_template('wrapped.html.j2', title='Hashview Wrapped', 
                            previous_year = year,
                            longest_password_all_table=longest_password_all_table,
                            longest_password_personal=longest_password_personal,

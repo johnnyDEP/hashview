@@ -1,10 +1,13 @@
+"""Forms Page to manage Jobs"""
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, TextAreaField, FileField, SelectMultipleField, widgets
+from wtforms import StringField, SubmitField, SelectField, TextAreaField, FileField
 from wtforms.validators import DataRequired, ValidationError
 from hashview.models import Jobs
 
 
 class JobsForm(FlaskForm):
+	"""Class representing an Jobs Forms"""
+
 	name = StringField('Job Name', validators=[DataRequired()])
 	priority = SelectField('Job Priority', choices=[('5', '5 - highest'),
 													('4', '4 - higher'),
@@ -21,6 +24,8 @@ class JobsForm(FlaskForm):
 			raise ValidationError('That job name is taken. Please choose a different one.')
 
 class JobsNewHashFileForm(FlaskForm):
+    """Class representing an Jobs New Hashfile Form"""
+
     name = StringField('Hashfile Name') # While required we may dynamically create this based on file upload
     file_type = SelectField('Hash File Format', choices=[('', '--SELECT--'),
 													('pwdump', 'pwdump()'), 
@@ -34,20 +39,20 @@ class JobsNewHashFileForm(FlaskForm):
     						    					('', 'O P E R A T I N G   S Y S T E M'),
 													('0', '(0) MD5'),
 													('22', '(22) Juniper NetScreen ScreenOS'),													
-						    						('122', '(122) Mac OSX (from 10.4 to 10.7)'),
+						    							('122', '(122) Mac OSX (from 10.4 to 10.7)'),
 													('500', '(500) Cisco-IOS $1$'),
 													('500', '(500) md5crypt / Unix $1$'),
                                                     ('1000', '(1000) NTLM'),
 						    						('1100', '(1100) MSCache / DomainCachedCredentials'),
 													('1500', '(1500) descrypt / DES Unix'),	
 													('1800', '(1800) sha512crypt / Unix $6$'),																									
-						    						('2100', '(2100) MSCache 2 / DCC2'),													
+						    							('2100', '(2100) MSCache 2 / DCC2'),													
 													('2400', '(2400) Cisco-PIX'),
 													('2410', '(2410) Cisco-ASA'),
 													('3200', '(3200) bcrypt / Blowfish Unix $2*$'),
 													('5700', '(5700) Cisco-IOS type 4 (SHA256)'),
 													('7000', '(7000) FortiGate (FortiOS)'),
-						    						('7100', '(7100) Mac OSX 10.8+ ($ml$)'),
+						    							('7100', '(7100) Mac OSX 10.8+ ($ml$)'),
 													('8100', '(8100) Citrix NetScaler (SHA1)'),
 													('9900', '(9900) Radmin2'),													
 													('22200', '(22200) Citrix NetScaler (SHA512)'),
@@ -180,6 +185,9 @@ class JobsNewHashFileForm(FlaskForm):
                                                     ('9600', '(9600) MS Office 2013'),
 													('16200', '(16200) Apple Secure Notes $ASN$'),
 													('23300', '(23300) Apple iWork $iwork$'),
+						  							('9400', '(9400) MS Office 2007'),
+						  							('9500', '(9500) MS Office 2010'),
+						  							('9600', '(9600) MS Office 2013'),
 
 													('', ''), # Spacer for better visibility
 													('', 'E N T E R P R I S E   S O F T W A R E'),
@@ -216,13 +224,17 @@ class JobsNewHashFileForm(FlaskForm):
     submit = SubmitField('Next')
 
 class JobsNotificationsForm(FlaskForm):
-    job_completion = SelectField('Notify when Job completes', choices=[('none', 'No'),
+	"""Class representing Job Notification Form"""
+
+	job_completion = SelectField('Notify when Job completes', choices=[('none', 'No'),
 													                    ('email', 'Send Email'),
 													                    ('push', 'Send Push Notification')], validators=[DataRequired()])
-    hash_completion = SelectField('Notify when specific hashes crack', choices=[('none', 'No'),
+	hash_completion = SelectField('Notify when specific hashes crack', choices=[('none', 'No'),
 													                    ('email', 'Send Email'),
 													                    ('push', 'Send Push Notification')], validators=[DataRequired()])
-    submit = SubmitField('Next')
+	submit = SubmitField('Next')
 
 class JobSummaryForm(FlaskForm):
+    """Class representing an Jobs Summary"""
+
     submit = SubmitField('Complete')

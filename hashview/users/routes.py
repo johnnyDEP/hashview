@@ -1,3 +1,4 @@
+"""Flask routes to handle Users"""
 from textwrap import dedent
 from datetime import datetime
 
@@ -30,14 +31,18 @@ users = Blueprint('users', __name__)
 
 @users.route("/login", methods=['GET'])
 def login_get():
+    """Function to present login page"""
+
     form = LoginForm()
-    return render_template('login.html', title='Login', form=form)
+    return render_template('login.html.j2', title='Login', form=form)
 
 @users.route("/login", methods=['POST'])
 def login_post():
+    """Function to handle login requests"""
+
     def failed():
         flash('Login Unsuccessful. Please check email and password', 'danger')
-        return render_template('login.html', title='Login', form=form)
+        return render_template('login.html.j2', title='Login', form=form)
 
     form = LoginForm()
     if not form.validate_on_submit():
@@ -53,34 +58,39 @@ def login_post():
         current_app.logger.info('Login is Complete with Failure(Invalid Password).')
         return failed()
 
-    else:
-        login_user(user, remember=form.remember.data)
-        user.last_login_utc = datetime.utcnow()
-        db.session.commit()
-        current_app.logger.info('Login is Complete with Success(User:%s).', user.email_address)
-        return redirect(
-            request.args.get("next", url_for('main.home'))
-        )
+    login_user(user, remember=form.remember.data)
+    user.last_login_utc = datetime.utcnow()
+    db.session.commit()
+    current_app.logger.info('Login is Complete with Success(User:%s).', user.email_address)
+    return redirect(
+        request.args.get("next", url_for('main.home'))
+    )
 
 @users.route("/logout")
 def logout():
+    """Function to handle logout requests"""
+
     logout_user()
     return redirect(url_for('main.home'))
 
 @users.route("/users", methods=['GET', 'POST'])
 @login_required
 def users_list():
+    """Function to list users"""
+
     users = Users.query.all()
     jobs = Jobs.query.all()
     wordlists = Wordlists.query.all()
     rules = Rules.query.all()
     tasks = Tasks.query.all()
     task_groups = TaskGroups.query.all()
-    return render_template('users.html', title='Users', users=users, jobs=jobs, wordlists=wordlists, rules=rules, tasks=tasks, task_groups=task_groups)
+    return render_template('users.html.j2', title='Users', users=users, jobs=jobs, wordlists=wordlists, rules=rules, tasks=tasks, task_groups=task_groups)
 
 @users.route("/users/add", methods=['GET', 'POST'])
 @login_required
 def users_add():
+    """Function to add new user"""
+
     if current_user.admin:
         form = UsersForm()
         if form.validate_on_submit():
@@ -93,25 +103,27 @@ def users_add():
             db.session.commit()
             flash(f'Account created for {form.email.data}!', 'success')
             return redirect(url_for('users.users_list'))
-        return render_template('users_add.html', title='User Add', form=form)
-    else:
-        abort(403)
+        return render_template('users_add.html.j2', title='User Add', form=form)
+    abort(403)
 
 @users.route("/users/delete/<int:user_id>", methods=['POST'])
 @login_required
 def users_delete(user_id):
+    """Function to delete user"""
+
     if current_user.admin:
         user = Users.query.get_or_404(user_id)
         db.session.delete(user)
         db.session.commit()
         flash('User has been deleted!', 'success')
         return redirect(url_for('users.users_list'))
-    else:
-        abort(403)
+    abort(403)
 
 @users.route("/profile", methods=['GET', 'POST'])
 @login_required
 def profile():
+    """Function to display user profile"""
+
     form = ProfileForm()
     if form.validate_on_submit():
         current_user.first_name = form.first_name.data
@@ -126,11 +138,13 @@ def profile():
     elif request.method == 'GET':
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
-    return render_template('profile.html', title='Profile', form=form, current_user=current_user)
+    return render_template('profile.html.j2', title='Profile', form=form, current_user=current_user)
 
 @users.route("/profile/send_test_pushover", methods=['GET'])
 @login_required
 def send_test_pushover():
+    """Function to test pushover notification"""
+
     user = Users.query.get(current_user.id)
     send_pushover(user, 'Test Message From Hashview', 'This is a test pushover message from hashview')
     flash('Pushover Sent', 'success')
@@ -139,16 +153,20 @@ def send_test_pushover():
 @users.route("/profile/send_test_email", methods=['GET'])
 @login_required
 def send_test_email():
+    """Function to test send email"""
+
     user = Users.query.get(current_user.id)
     if send_email(user, 'Test Message From Hashview', 'This is a test email message from hashview'):
         flash('Email Sent', 'success')
     else:
         flash('Email Failure. Check SMTP settings.', 'danger')
-    return redirect(url_for('users.profile'))    
+    return redirect(url_for('users.profile'))
 
 @users.route("/profile/generate_api_key", methods=['GET'])
 @login_required
 def generate_api_key():
+    """Function to generate API key"""
+
     user = Users.query.get(current_user.id)
     user.api_key = str(uuid.uuid4())
     db.session.commit()
@@ -157,6 +175,7 @@ def generate_api_key():
 
 @users.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
+    """Function to present password reset request"""
 
     form = RequestResetForm()
     if form.validate_on_submit():
@@ -164,40 +183,45 @@ def reset_request():
         if user:
             token = user.get_reset_token()
             subject = 'Password Reset Request.'
-            message = f'''To reset your password, vist the following link:
-    {url_for('users.reset_token', user_id=user.id, token=token, _external=True)}
+            message = dedent(f'''\
+                To reset your password, vist the following link:
 
-    If you did not make this request... then something phishy is going on.
-    '''
+                {url_for('users.reset_token', user_id=user.id, token=token, _external=True)}
+
+                If you did not make this request... then something phishy is going on.
+            ''')
             send_email(user, subject, message)
         flash('An email has been sent to '+  form.email.data, 'info')
         return redirect(url_for('users.login_get'))
-    return render_template('reset_request.html', title='Reset Password', form=form)
+    return render_template('reset_request.html.j2', title='Reset Password', form=form)
 
 @users.route("/admin_reset_password/<int:user_id>", methods=['GET', 'POST'])
 @login_required
 def admin_reset(user_id):
+    """Function to manage admin initiated password reset"""
+
     if not current_user.admin:
         flash('Unauthorized to reset users account.', 'danger')
         return redirect(url_for('users.users_list'))
 
-    else:
-        user = Users.query.get(user_id)
-        token = user.get_reset_token()
-        subject = 'Password Reset Request.'
-        message = dedent(f'''\
-            To reset your password, vist the following link:
-            {url_for('users.reset_token', user_id=user_id, token=token, _external=True)}
+    user = Users.query.get(user_id)
+    token = user.get_reset_token()
+    subject = 'Password Reset Request.'
+    message = dedent(f'''\
+        To reset your password, vist the following link:
+        {url_for('users.reset_token', user_id=user_id, token=token, _external=True)}
 
-            If you did not make this request... then something phishy is going on.
-            ''')
-        send_email(user, subject, message)
-        flash('An email has been sent to '+  user.email_address, 'info')
-        return redirect(url_for('users.users_list'))
+        If you did not make this request... then something phishy is going on.
+    ''')
+    send_email(user, subject, message)
+    flash('An email has been sent to '+  user.email_address, 'info')
+    return redirect(url_for('users.users_list'))
 
 
 @users.route("/reset_password/<int:user_id>/<string:token>", methods=['GET', 'POST'])
 def reset_token(user_id :int, token :str):
+    """Function to manage password reset token"""
+
     user = Users.query.get(user_id)
     if not user:
         flash('Invalid User Id!', 'warning')
@@ -209,11 +233,10 @@ def reset_token(user_id :int, token :str):
 
     form = ResetPasswordForm()
     if not form.validate_on_submit():
-        return render_template('reset_token.html', title='Reset Password', form=form)
+        return render_template('reset_token.html.j2', title='Reset Password', form=form)
 
-    else:
-        hashed_password = bcrypt.generate_password_hash(form.password.data)
-        user.password = hashed_password
-        db.session.commit()
-        flash('Your password has been updated! You are now able to login.', 'success')
-        return redirect(url_for('users.login_get'))
+    hashed_password = bcrypt.generate_password_hash(form.password.data)
+    user.password = hashed_password
+    db.session.commit()
+    flash('Your password has been updated! You are now able to login.', 'success')
+    return redirect(url_for('users.login_get'))
