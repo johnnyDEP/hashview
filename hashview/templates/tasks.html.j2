@@ -4,7 +4,6 @@
 <h1>Tasks</h1>
 <br>
 Task are predefined hashcat commands. Any number of tasks can be assigned to a Job.
-<a class="btn btn-success btn-sm mt-1 mb-1" href="{{ url_for('tasks.tasks_add') }}">Add</a>
 <br>
 <br>
 <br>
@@ -12,36 +11,58 @@ Task are predefined hashcat commands. Any number of tasks can be assigned to a J
 {% block content %}
     <article class="media content-section">
         <div class="media-body">
-            <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Task Name</th>
-                    <th scope="col">Owner</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Control</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for task in tasks %}
-                        <tr>
-                            <td>{{ task.name }}</td>
-                            <td>
-                                {% for user in users %}
-                                    {% if user.id == task.owner_id %}
-                                        {{ user.first_name }} {{ user.last_name }}
+            <div class="card">
+                <h4 class="card-header">
+                    Tasks 
+                    <a class="btn btn-success btn-sm mt-1 mb-1 pull-right" href="{{ url_for('tasks.tasks_add') }}">Add</a>
+                </h4>
+                <div class="card-body ">            
+                    <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th scope="col">Task Name</th>
+                        <th scope="col">Owner</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Control</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                            <tr>
+                                <td>{{ task.name }}</td>
+                                <td>
+                                    {% for user in users %}
+                                        {% if user.id == task.owner_id %}
+                                            {{ user.first_name }} {{ user.last_name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if task.hc_attackmode == 0 %}
+                                        Straight (Wordlist + Rules)
+                                    {% elif task.hc_attackmode == 1 %}
+                                        Combination (Wordlist1, Rule1, Wordlist2, Rule2)                                      
+                                    {% elif task.hc_attackmode == 3 %}
+                                        Brute-force (Maskmode)
+                                    {% elif task.hc_attackmode == 6 %}
+                                        Hybrid (Wordlist + Mask)
+                                    {% elif task.hc_attackmode == 7 %}
+                                        Hybrid (Mask + Wordlist)
+                                    {% else %}
+                                        UNDEF?
                                     {% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>{{ task.hc_attackmode}}</td>
-                            <td>
-                                <button type="button" class="fa fa-info btn btn-info" data-toggle="modal" data-target="#infoModal{{task.id}}" title=Info></button>
-                                <a class="fa fa-edit btn btn-warning" href="/tasks/edit/{{task.id}}" role="button" title=Edit></a>
-                                <button type="button" class="fa fa-trash btn btn-danger" data-toggle="modal" data-target="#deleteModal{{task.id}}" title=Delete></button>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-              </table>
+                                </td>
+                                <td>
+                                    <button type="button" class="fa fa-info btn btn-info" data-toggle="modal" data-target="#infoModal{{task.id}}" title=Info></button>
+                                    <a class="fa fa-edit btn btn-warning" href="/tasks/edit/{{task.id}}" role="button" title=Edit></a>
+                                    <button type="button" class="fa fa-trash btn btn-danger" data-toggle="modal" data-target="#deleteModal{{task.id}}" title=Delete></button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </article>
     {% for task in tasks %}

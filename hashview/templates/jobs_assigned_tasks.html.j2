@@ -42,7 +42,19 @@ The following are tasks that are assigned to the job. Each task is run once.
                             <td>
                                 {% for task in tasks %}
                                     {% if task.id == job_task.task_id %}
-                                        {{task.hc_attackmode}}
+                                        {% if task.hc_attackmode == 0 %}
+                                            Straight (Wordlist + Rules)
+                                        {% elif task.hc_attackmode == 1 %}
+                                            Combination (Wordlist1, Rule1, Wordlist2, Rule2)                                          
+                                        {% elif task.hc_attackmode == 3 %}
+                                            Brute-force (Maskmode)
+                                        {% elif task.hc_attackmode == 6 %}
+                                            Hybrid (Wordlist + Mask)
+                                        {% elif task.hc_attackmode == 7 %}
+                                            Hybrid (Mask + wordlist)
+                                        {% else %}
+                                            UNDEF?
+                                        {% endif %}
                                     {% endif %}
                                 {% endfor %}
                             </td>
@@ -55,9 +67,8 @@ The following are tasks that are assigned to the job. Each task is run once.
                     {% endfor %}
                     <tr>
                         <td></td>
-                        <td></td>
                         <td>
-                            <div class="btn-group">
+                            <div class="btn-group pull-right">
                                 <div class="dropdown show">
                                     <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     Add Task
@@ -78,7 +89,11 @@ The following are tasks that are assigned to the job. Each task is run once.
                                         {% endfor %}
                                     </div>
                                 </div>
-                                <div class="dropdown show pl-2">
+                            </div>  
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <div class="dropdown show">
                                     <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     Add Task Group
                                     </a>
@@ -88,6 +103,9 @@ The following are tasks that are assigned to the job. Each task is run once.
                                             <a class="dropdown-item" href="/jobs/{{job.id}}/assign_task_group/{{task_group.id}}">{{task_group.name}}</a>
                                         {% endfor %}
                                     </div>
+                                </div>
+                                <div class="pl-3">
+                                    <a class="btn btn-success" href="/jobs/{{job.id}}/assign_task/lucky" role="button">Add Top Tasks</a>
                                 </div>
 
                                  <!-- DeleteAllTaskModal -->

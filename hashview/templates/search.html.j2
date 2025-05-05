@@ -49,38 +49,47 @@
                 </thead>
                 <tbody>
                     {% for entry in results %}
-                        <tr>
-                            <td>
-                                {% for hashfile in hashfiles %}
-                                    {% if hashfile.id == entry[1].hashfile_id %}
-                                        {% for customer in customers %}
-                                            {% if customer.id == hashfile.customer_id %}
-                                                {{ customer.name }}
-                                            {% endif %}
-                                        {% endfor %}
+                        {% if redacted_data == False %}
+                            <tr>
+                                <td>
+                                    {% for hashfile in hashfiles %}
+                                        {% if hashfile.id == entry[1].hashfile_id %}
+                                            {% for customer in customers %}
+                                                {% if customer.id == hashfile.customer_id %}
+                                                    {{ customer.name }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if entry[1].username %}
+                                        {{entry[1].username | jinja_hex_decode }}
+                                    {% else %}
+                                        <i>None</i>
                                     {% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% if entry[1].username %}
-                                    {{entry[1].username | jinja_hex_decode }}
-                                {% else %}
-                                    <i>None</i>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <p class="text-break">
-                                    {{ entry[0].ciphertext }}
-                                </p>
-                            </td>
-                            <td>
-                                {% if entry[0].cracked %}
-                                    {{ entry[0].plaintext | jinja_hex_decode }}
-                                {% else %}
-                                    <i>unrecovered</i>
-                                {% endif %}
-                            </td>
-                        </tr>
+                                </td>
+                                <td>
+                                    <p class="text-break">
+                                        {{ entry[0].ciphertext }}
+                                    </p>
+                                </td>
+                                <td>
+                                    {% if entry[0].cracked %}
+                                        {{ entry[0].plaintext | jinja_hex_decode }}
+                                    {% else %}
+                                        <i>unrecovered</i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td><i>removed</i></td>
+                                <td><i>removed</i></td>
+                                <td>{{ entry.ciphertext }}</td>
+                                <td>{{ entry.plaintext | jinja_hex_decode }}</td>
+                            </tr>            
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

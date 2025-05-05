@@ -1,4 +1,11 @@
-"""Flask routes to handle Analytics"""
+from flask import Blueprint, jsonify, redirect, request, send_from_directory, current_app, url_for
+from hashview.models import Agents, JobTasks, Tasks, Wordlists, Rules, Jobs, Hashes, Hashfiles, HashfileHashes, Users, HashNotifications, Settings
+from hashview.utils.utils import save_file, get_md5_hash, update_dynamic_wordlist, update_job_task_status, send_email, send_pushover, notify_admins
+from hashview.models import db
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from packaging import version
+from datetime import datetime, timedelta
+import hashview
 import os
 import json
 import secrets
@@ -294,12 +301,13 @@ def v1_api_get_wordlist_download(wordlist_id):
     update_heartbeat(request.cookies.get('uuid'))
     wordlist = Wordlists.query.get(wordlist_id)
     wordlist_name = wordlist.path.split('/')[-1]
-    cmd = "gzip -9 -k -c hashview/control/wordlists/" + wordlist_name + " > hashview/control/tmp/" + wordlist_name + ".gz"
+    random_hex = secrets.token_hex(8)
+    cmd = "gzip -9 -k -c hashview/control/wordlists/" + wordlist_name + " > hashview/control/tmp/" + wordlist_name + "_" + random_hex + ".gz"
 
     # What command injection?!
     # TODO
     os.system(cmd)
-    return send_from_directory('control/tmp', wordlist_name + '.gz', mimetype = 'application/octet-stream')
+    return send_from_directory('control/tmp', wordlist_name + "_" + random_hex + ".gz", mimetype = 'application/octet-stream')
 
 # Update Dynamic Wordlist
 @api.route('/v1/updateWordlist/<int:wordlist_id>', methods=['GET'])
@@ -390,14 +398,17 @@ def v1_api_get_hashfile(hashfile_id):
     return send_from_directory('control/tmp/', random_hex)
 
 # Upload Cracked Hashes
-@api.route('/v1/uploadCrackFile/<int:hash_type>', methods=['POST'])
-def v1_api_put_jobtask_crackfile_upload(hash_type):
+@api.route('/v1/uploadCrackFile/<int:task_id>/<int:hash_type>', methods=['POST'])
+def v1_api_put_jobtask_crackfile_upload(task_id, hash_type):
     """Route to recieve recovered hashes"""
     if not is_authorized(user=False, agent=True, request=request):
         return redirect("/v1/not_authorized")
 
     update_heartbeat(request.cookies.get('uuid'))
 
+    # TODO
+    # We really should validate if task_id is legit
+    
     # save to file
     file_contents = request.get_json()
 
@@ -413,6 +424,7 @@ def v1_api_put_jobtask_crackfile_upload(hash_type):
             ciphertext = ':'.join(elements)
 
             #print('Plaintext: ' + str(bytes.fromhex(plaintext).decode('latin-1')))
+            #print('Ciphertext: ' + str(ciphertext))
 
             record = Hashes.query.filter_by(hash_type=hash_type, sub_ciphertext=get_md5_hash(ciphertext), cracked='0').first()
             if record:
@@ -420,9 +432,13 @@ def v1_api_put_jobtask_crackfile_upload(hash_type):
                     #record.plaintext = plaintext.decode('latin-1')
                     record.plaintext = plaintext
                     record.cracked = 1
+                    #print('i should be updating the datetime')
+                    record.recovered_at = datetime.today()
+                    record.task_id = task_id
                     db.session.commit()
-                except:
-                    print('Failed to import followint cracked hash: ' + str(encoded_plaintext))
+                except Exception as error:
+                    print('Failed to import following cracked hash: ' + str(encoded_plaintext))
+                    print('Reason: ' + str(error))
 
     # Send Hash Completion Notifications
     hash_notifications = HashNotifications.query.all()
@@ -452,6 +468,95 @@ def v1_api_put_jobtask_crackfile_upload(hash_type):
         'msg': 'OK'
     }
     return jsonify(message)
+
+# Upload Cracked Hashes
+@api.route('/v1/uploadCrackFile/<int:job_task_id>', methods=['POST'])
+def v1_api_post_jobtask_crackfile_upload(job_task_id):
+    if not isAuthorized(user=False, agent=True, request=request):
+        return redirect("/v1/not_authorized")
+
+    updateHeartbeat(request.cookies.get('uuid'))
+
+    # TODO 
+    # Validate calling agent is actually assigned jobtask
+
+    # save to file
+    file_contents = request.get_json()
+
+    # Get Hashtype from job_task_id
+    job_task = JobTasks.query.get(job_task_id)
+
+    # Get Job from job_task
+    job = Jobs.query.get(job_task.job_id)
+
+    # Get hashfile from job
+    hashfile = Hashfiles.query.get(job.hashfile_id)
+
+    # Get hashfilehashes from hashfile
+    hashfilehashes = HashfileHashes.query.filter_by(hashfile_id=hashfile.id).first()
+
+    # Get single hash
+    single_hash = Hashes.query.get(hashfilehashes.hash_id)
+
+    hash_type = single_hash.hash_type
+
+    #for entry in lines:
+    for entry in file_contents['file'].split('\n'):
+        if ':' in entry:
+            encoded_plaintext = entry.split(':')[-1]
+            plaintext = encoded_plaintext.rstrip().upper()
+            elements = entry.split(':')
+            # Remove cracked hash
+            elements.pop()
+            ciphertext = ':'.join(elements)
+
+            #print('Plaintext: ' + str(bytes.fromhex(plaintext).decode('latin-1')))
+            #print('Ciphertext: ' + str(ciphertext))
+
+            record = Hashes.query.filter_by(hash_type=hash_type, sub_ciphertext=get_md5_hash(ciphertext), cracked='0').first()
+            if record:
+                try:
+                    #record.plaintext = plaintext.decode('latin-1')
+                    record.plaintext = plaintext
+                    record.cracked = 1
+                    #print('i should be updating the datetime')
+                    record.recovered_at = datetime.today()
+                    record.task_id = job_task.task_id
+                    record.recovered_by = job.owner_id
+                    db.session.commit()
+                except Exception as error:
+                    print('Failed to import following cracked hash: ' + str(encoded_plaintext))
+                    print('Reason: ' + str(error))
+
+    # Send Hash Completion Notifications
+    hash_notifications = HashNotifications.query.all()
+    for hash_notification in hash_notifications:
+        user = Users.query.get(hash_notification.owner_id)
+        message = "Congratulations, a hash has been recovered!: \n\n"
+
+        # Check if hash is cracked
+        hash = Hashes.query.get(hash_notification.hash_id)
+        if hash.cracked:
+
+            message += 'You can check the results using the following link: ' + "\n"
+            message += url_for('searches.searches_list', hash_id=hash.id, _external=True)
+            if hash_notification.method == 'email':
+                send_email(user, 'Hashview User Hash Recovered!', message)
+            elif hash_notification.method == 'push':
+                if user.pushover_user_key and user.pushover_app_id:
+                    send_pushover(user, 'Message from Hashview', message)
+            else:
+                send_email(user, 'Hashview: Missing Pushover Key', 'Hello, you were due to recieve a pushover notification, but because your account was not provisioned with an pushover ID and Key, one could not be set. Please log into hashview and set these options under Manage->Profile.')
+            db.session.delete(hash_notification)
+            db.session.commit()
+
+    message = {
+        'status': 200,
+        'type': 'message',
+        'msg': 'OK'
+    }
+    return jsonify(message)
+
 
 # Get Hashtype
 @api.route('/v1/getHashType/<int:hashfile_id>', methods=['GET'])
@@ -540,5 +645,27 @@ def v1_api_search():
             'status': 500,
             'type': 'message',
             'msg': 'Invalid Search'
+        }            
+    return jsonify(message)
+
+# Error
+@api.route('/v1/error', methods=['POST'])
+def v1_api_error():
+    if not is_authorized(user=False, agent=True, request=request):
+        return redirect("/vi/not_authorized")
+
+    uuid = request.cookies.get('uuid')
+    agent = Agents.query.filter_by(uuid=uuid).first()
+    message_json = request.get_json()
+
+    subject = 'Error on ' + str(agent.name)
+    message_body = message_json['error']
+
+    notify_admins(subject, message_body)
+
+    message = {
+        'status': 200,
+        'type': 'message',
+        'msg': 'OK'
         }
     return jsonify(message)

@@ -213,6 +213,7 @@ def create_app():
     from hashview.analytics.routes import analytics
     from hashview.notifications.routes import notifications
     from hashview.searches.routes import searches
+    from hashview.wrapped.routes import wrapped
     from hashview.setup.routes import blueprint as setup_blueprint
 
     app.register_blueprint(agents)
@@ -230,6 +231,7 @@ def create_app():
     app.register_blueprint(analytics)
     app.register_blueprint(notifications)
     app.register_blueprint(searches)
+    app.register_blueprint(wrapped)
     app.register_blueprint(setup_blueprint)
 
     app.add_template_filter(jinja_hex_decode)

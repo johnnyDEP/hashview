@@ -11,52 +11,59 @@ The following are a list of Hash Files currently configured in Hashview. All Has
 {% block content %}
     <article class="media content-section">
         <div class="media-body">
-            <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Customer</th>
-                    <th scope="col">Hash File</th>
-                    <th scope="col">Hash Type</th>
-                    <th scope="col">Crack Rate</th>
-                    <th scope="col">Uploaded At</th>
-                    <th scope="col">Control</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for customer in customers %}
+            <div class="card">
+                <h4 class="card-header">
+                    Hash Files
+                </h4>
+                <div class="card-body "> 
+                    <table class="table table-sm">
+                        <thead>
                         <tr>
-                            <td>{{ customer.name }}</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <th scope="col">Customer</th>
+                            <th scope="col">Hash File Name</th>
+                            <th scope="col">Hash Type</th>
+                            <th scope="col">Crack Rate</th>
+                            <th scope="col">Uploaded At</th>
+                            <th scope="col">Control</th>
                         </tr>
-                        {% for hashfile in hashfiles %}
-                            {% if hashfile.customer_id == customer.id %}
+                        </thead>
+                        <tbody>
+                            {% for customer in customers %}
                                 <tr>
+                                    <td>{{ customer.name }}</td>
                                     <td></td>
-                                    <td>{{ hashfile.name }}</td>
-                                    <td>
-                                        {{hash_type_dict[hashfile.id]}}
-                                    </td>
-                                    <td>
-                                        {{cracked_rate[hashfile.id]}}
-                                    </td>
-                                    <td>
-                                        {{hashfile.uploaded_at}}
-                                    </td>
-                                    <td>
-                                        <a class="fa fa-download btn btn-primary" href="/analytics/download?type=found&customer_id={{customer.id}}&hashfile_id={{hashfile.id}}" role="button" title=Download></a>
-                                        <a class="fa fa-pie-chart btn btn-warning" href="/analytics?customer_id={{customer.id}}&hashfile_id={{hashfile.id}}" role="button" title=Analytics></a>
-                                        <button type="button" class="fa fa-info btn btn-info" data-toggle="modal" data-target="#infoModal{{hashfile.id}}" title=Info></button>
-                                        <button type="button" class="fa fa-trash btn btn-danger" data-toggle="modal" data-target="#deleteModal{{hashfile.id}}" title=Delete></button>
-                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
                                 </tr>
-                            {% endif %}
-                        {% endfor %}
-                    {% endfor %}
-                </tbody>
-              </table>
+                                {% for hashfile in hashfiles %}
+                                    {% if hashfile.customer_id == customer.id %}
+                                        <tr>
+                                            <td></td>
+                                            <td>{{ hashfile.name }}</td>
+                                            <td>
+                                                {{hash_type_dict[hashfile.id]}}
+                                            </td>
+                                            <td>
+                                                {{cracked_rate[hashfile.id]}}
+                                            </td>
+                                            <td>
+                                                {{hashfile.uploaded_at}}
+                                            </td>
+                                            <td>
+                                                <a class="fa fa-download btn btn-primary" href="/analytics/download?type=found&customer_id={{customer.id}}&hashfile_id={{hashfile.id}}" role="button" title=Download></a> 
+                                                <a class="fa fa-pie-chart btn btn-warning" href="/analytics?customer_id={{customer.id}}&hashfile_id={{hashfile.id}}" role="button" title=Analytics></a> 
+                                                <button type="button" class="fa fa-info btn btn-info" data-toggle="modal" data-target="#infoModal{{hashfile.id}}" title=Info></button>
+                                                <button type="button" class="fa fa-trash btn btn-danger" data-toggle="modal" data-target="#deleteModal{{hashfile.id}}" title=Delete></button>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>  
         </div>
     </article>
     {% for hashfile in hashfiles %}

@@ -42,7 +42,7 @@ def ensure_flask_bcrypt():
             raise Exception('old version')
     except:
         print('\nPlease make sure that your dependencies are up to date (including replacing Flask-Bcrypt with Bcrypt-Flask).')
-        exit(1)
+        #exit(1)
 
 
 def ensure_admin_account_cli(db, bcrypt):

@@ -1,4 +1,4 @@
-{% extends "layout.html.j2" %}
+{% extends "layout.html" %}
 {% block header %}
 <br>
 <h1>Assign Hashes for: {{job.name}}</h1>
@@ -50,15 +50,11 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
             document.getElementById('shadow_hash_type_div').style.display = 'none';
             document.getElementById('hash_type_div').style.display = 'inline';
             document.getElementById('hashfile_div').style.display = 'none';
-        }
+        }                                       
     }
     function showHashFileSubmit(){
         document.getElementById('hashfile_div').style.display = 'inline';
-    } 
-    function auto_grow(element) {
-        element.style.height = "5px";
-        element.style.height = (element.scrollHeight) + "px";
-    }  
+    }   
 </script>
 <nav>
     <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -95,7 +91,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                         {% else %}
                             {{ jobsNewHashFileForm.file_type(class="form-control form-control-lg", onchange="showHashTypeSelected(this)") }}
                         {% endif %}
-                    </div>
+                    </div> 
                     <!-- PwDump Hash Type-->
                     <div class="form-group" style=display:none id="pwdump_hash_type_div">
                         {{ jobsNewHashFileForm.pwdump_hash_type.label(class="form-control-label") }}
@@ -155,7 +151,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                         {% else %}
                             {{ jobsNewHashFileForm.shadow_hash_type(class="form-control form-control-lg", onchange="showHashFileSubmit()") }}
                         {% endif %}
-                    </div>
+                    </div>                                                            
                     <!-- Hash Type-->
                     <div class="form-group" style=display:none id="hash_type_div">
                         {{ jobsNewHashFileForm.hash_type.label(class="form-control-label") }}
@@ -170,19 +166,20 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                         {% else %}
                             {{ jobsNewHashFileForm.hash_type(class="form-control form-control-lg", onchange="showHashFileSubmit()") }}
                         {% endif %}
-                    </div>
+                    </div>                    
                     <!-- Hashfile Content -->
                     <div class="form-group" style=display:none id="hashfile_div">
                         <br>
                         <br>
                         <label class="form-control-label" for="hash_type">Hash File Content</label>
-                        <nav>
-                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                                <a class="nav-link active" id="pills-home-tab" data-toggle="tab" href="#pills-home" role="tab" aria-controls="pills-home" aria-selected="true">Individual Hashes</a>
-                                <a class="nav-link" id="pills-profile-tab" data-toggle="tab" href="#pills-profile" role="tab" aria-controls="pills-profile" aria-selected="false">Upload File</a>
-                            </div>
-                        </nav>
-                        <br>
+                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="pills-home-tab" data-toggle="pill" href="#pills-home" role="tab" aria-controls="pills-home" aria-selected="true">Individual Hashes</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#pills-profile" role="tab" aria-controls="pills-profile" aria-selected="false">File Upload</a>
+                            </li>
+                        </ul>
                         <!-- Copy / Paste -->
                         <div class="tab-content" id="pills-tabContent">
                             <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
@@ -211,7 +208,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                                             {% endfor %}
                                         </div>
                                     {% else %}
-                                        {{ jobsNewHashFileForm.hashfilehashes(class="form-control form-control-lg", onchange="showHashFileSubmit()", oninput="auto_grow(this)") }}
+                                        {{ jobsNewHashFileForm.hashfilehashes(class="form-control form-control-lg", onchange="showHashFileSubmit()") }}
                                     {% endif %}
                                 </div>
                             </div>
@@ -224,8 +221,8 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                                         {% for error in jobsNewHashFileForm.hashfile.errors %}
                                             <span class="text-danger">{{ error }}</span></br>
                                         {% endfor %}
-                                    {% endif %}
-                                </div>
+                                    {% endif %}  
+                                </div> 
                             </div>
                         </div>
                     </div>
@@ -233,7 +230,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                 <br>
                 <div class="form-group">
                     <a class="btn btn-secondary" href="{{ url_for('jobs.jobs_list') }}">Back</a>
-                    <button class='btn btn-primary pull-right' type='submit'>Next</button>
+                    <button class='btn btn-primary pull-right' type='submit'>Next</button>              
                 </div>
             </form>
         </div>
@@ -241,7 +238,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
     {% if job.hashfile_id == None %}
         <div class="tab-pane fade" id="nav-existing-hashfile" role="tabpanel" aria-labelledby="nav-existing-hashfile-tab">
     {% else %}
-        <div class="tab-pane fade show active" id="nav-existing-hashfile" role="tabpanel" aria-labelledby="nav-existing-hashfile-tab">
+        <div class="tab-pane fade show active" id="nav-existing-hashfile" role="tabpanel" aria-labelledby="nav-existing-hashfile-tab">      
     {% endif %}
         <br>
         <div class="content-section">
@@ -258,7 +255,7 @@ Apply hashes to be cracked. You can either copy/paste the desired hashes below, 
                                 {% endif %}
                                     {% for key, value in hashfile_cracked_rate.items() %}
                                         {% if key|string() == hashfile.id|string() %}
-                                            {{ value }} {{hashfile.name}}
+                                            {{ value }} {{hashfile.name}} 
                                         {% endif%}
                                     {% endfor %}
                                 </option>
