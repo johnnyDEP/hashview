@@ -24,3 +24,14 @@
 .home_status{
     font-size: 18px;
 }
+
+.card {
+    border: dark;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}

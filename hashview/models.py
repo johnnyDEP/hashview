@@ -59,7 +59,7 @@ class Users(db.Model, UserMixin):
         header = dict(alg='HS512')
 
         issued_at = int(datetime.today().timestamp())
-        expiration_time = issued_at + expires_sec
+        expiration_time = (issued_at + expires_sec)
         payload = dict(
             user_id = self.id,
             iat     = issued_at,
@@ -202,9 +202,12 @@ class Tasks(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    hc_attackmode = db.Column(db.String(25), nullable=False) # dictionary, mask, bruteforce, combinator
+    hc_attackmode = db.Column(db.String(25), nullable=False) # 0, 1, 3, 6, 7 
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     wl_id = db.Column(db.Integer)
+    wl_id_2 = db.Column(db.Integer)
+    j_rule = db.Column(db.String(25))
+    k_rule = db.Column(db.String(25))
     rule_id = db.Column(db.Integer)
     hc_mask = db.Column(db.String(50))
 
@@ -224,6 +227,9 @@ class Hashes(db.Model):
     ciphertext = db.Column(db.String(16383), nullable=False) # Setting this to max value for now. If we run into this being a limitation in the future we can revisit changing thist to TEXT or BLOB. https://sheeri.org/max-varchar-size/
     hash_type = db.Column(db.Integer, nullable=False, index=True)
     cracked = db.Column(db.Boolean, nullable=False)
+    recovered_at = db.Column(db.DateTime, nullable=True)
+    task_id = db.Column(db.Integer, nullable=True)
+    recovered_by = db.Column(db.Integer, nullable=True)
     plaintext = db.Column(db.String(256), index=True)
 
 class JobNotifications(db.Model):

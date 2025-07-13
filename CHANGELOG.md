@@ -2,6 +2,28 @@
 Notable changes will be documented here
 
 ## Current Release
+## [v0.8.2-Beta] - 2024-XX-XX
+### Added
+- Added Support For attack modes 1, 6 and 7.
+- New Dynamic wordlists, Usernames and Customer Names
+- Added Wrapped ;)
+### Changed
+- UI updates to following pages:
+    - agents
+    - wordlists
+    - rules
+    - jobs
+    - homepage
+    - hashfile
+    - customers
+### Fixed
+- Fixed analytics bug where username/password matching figure was not considering user names listed in kerb tickets.
+- Fixed input txt box when creating new job and copying/pasting hashes to dynamically grow.
+- Fixed raced condition where two agents triggered the generation of a dynamic wordlst stomping on one another
+- So many stability issues with the Agents. Report any i may have missed please
+- Fixed Bug in search form where, when referenced by hash_id, no results would be returned.
+- Fixed bug where name of the hashfile when uploaded during job creation was not getting populated in db.
+
 ## [v0.8.1-Beta] - 2023-08-18
 ### Added
 - Added support for max runtimes both for Jobs and Tasks. Admins can set the value (in hours) with = 0 being indefinate. 

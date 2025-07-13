@@ -42,8 +42,8 @@ class JobsNewHashFileForm(FlaskForm):
 						    							('122', '(122) Mac OSX (from 10.4 to 10.7)'),
 													('500', '(500) Cisco-IOS $1$'),
 													('500', '(500) md5crypt / Unix $1$'),
-						  							('1000', '(1000) NTLM'),
-						    							('1100', '(1100) MSCache / DomainCachedCredentials'),
+                                                    ('1000', '(1000) NTLM'),
+						    						('1100', '(1100) MSCache / DomainCachedCredentials'),
 													('1500', '(1500) descrypt / DES Unix'),	
 													('1800', '(1800) sha512crypt / Unix $6$'),																									
 						    							('2100', '(2100) MSCache 2 / DCC2'),													
@@ -107,7 +107,7 @@ class JobsNewHashFileForm(FlaskForm):
 													('112', '(112) Oracle 11+'),	
 													('131', '(131) Microsoft MSSQL (all versions)'),												
 													('300', '(300) MySQL (all versions)'),
-													('1731', '(1731) MSSQL (2012, 2014)'),
+                                                    ('1731', '(1731) MSSQL (2012, 2014)'),
 													
 													('', ''), # Spacer for better visibility
 													('', 'M O B I L E'),
@@ -180,6 +180,9 @@ class JobsNewHashFileForm(FlaskForm):
 
 													('', ''), # Spacer for better visibility
 													('', 'D O C U M E N T S'),
+                                                    ('9400', '(9400) MS Office 2007'),
+                                                    ('9500', '(9500) MS Office 2010'),
+                                                    ('9600', '(9600) MS Office 2013'),
 													('16200', '(16200) Apple Secure Notes $ASN$'),
 													('23300', '(23300) Apple iWork $iwork$'),
 						  							('9400', '(9400) MS Office 2007'),

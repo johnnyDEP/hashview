@@ -97,13 +97,13 @@ def setup_defaults_if_needed():
         logger.exception('Adding Admin User failed.')
 
     try:
-        from hashview.setup import add_default_dynamic_wordlist
-        from hashview.setup import default_dynamic_wordlist_need_added
-        if default_dynamic_wordlist_need_added(db):
+        from hashview.setup import add_default_dynamic_wordlists
+        from hashview.setup import default_dynamic_wordlists_need_added
+        if default_dynamic_wordlists_need_added(db):
             logger.info('Adding Default Dynamic Wordlist.')
-            add_default_dynamic_wordlist(db)
+            add_default_dynamic_wordlists(db)
     except:
-        logger.exception('Adding Default Dynamic Wordlist failed.')
+        logger.exception('Adding Default Dynamic Wordlists failed.')
 
     try:
         from hashview.setup import add_default_static_wordlist
@@ -213,6 +213,7 @@ def create_app():
     from hashview.analytics.routes import analytics
     from hashview.notifications.routes import notifications
     from hashview.searches.routes import searches
+    from hashview.wrapped.routes import wrapped
     from hashview.setup.routes import blueprint as setup_blueprint
 
     app.register_blueprint(agents)
@@ -230,6 +231,7 @@ def create_app():
     app.register_blueprint(analytics)
     app.register_blueprint(notifications)
     app.register_blueprint(searches)
+    app.register_blueprint(wrapped)
     app.register_blueprint(setup_blueprint)
 
     app.add_template_filter(jinja_hex_decode)

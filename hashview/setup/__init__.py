@@ -93,24 +93,55 @@ def add_default_static_wordlist(db :SQLAlchemy):
     db.session.commit()
 
 
-def default_dynamic_wordlist_need_added(db :SQLAlchemy) -> bool:
-    return (0 == db.session.query(Wordlists).filter_by(type='dynamic').filter_by(name='All Recovered Hashes').count())
+def default_dynamic_wordlists_need_added(db :SQLAlchemy) -> bool:
+    return (3 == db.session.query(Wordlists).filter_by(type='dynamic').count())
 
 
-def add_default_dynamic_wordlist(db :SQLAlchemy):
-    wordlist_path = 'hashview/control/wordlists/dynamic-all.txt'
-    with open(wordlist_path, mode='w'):
+def add_default_dynamic_wordlists(db :SQLAlchemy):
+    # All Recovered Hashes
+    wordlist_all_recovered_hashes_path = 'hashview/control/wordlists/dynamic-all.txt'
+    with open(wordlist_all_recovered_hashes_path, mode='w'):
         # 'w' => open for writing, truncating the file first
         pass
-    wordlist = Wordlists(
-        name     = 'All Recovered Hashes',
+    wordlist_all_recovered_hashes = Wordlists(
+        name     = '(Dynamic) All Recovered Hashes',
         owner_id = 1,
         type     = 'dynamic',
-        path     = wordlist_path,               # Can we make this a relative path?
-        checksum = get_filehash(wordlist_path),
+        path     = wordlist_all_recovered_hashes_path,               # Can we make this a relative path?
+        checksum = get_filehash(wordlist_all_recovered_hashes_path),
         size     = 0,
     )
-    db.session.add(wordlist)
+
+    # All Usersnames
+    wordlist_all_usernames_path = 'hashview/control/wordlists/dynamic-usernames.txt'
+    with open(wordlist_all_usernames_path, mode='w'):
+        # 'w' => open for writing, truncating the file first
+        pass
+    wordlist_all_usernames = Wordlists(
+        name     = '(Dynamic) All Usernames',
+        owner_id = 1,
+        type     = 'dynamic',
+        path     = wordlist_all_usernames_path,               # Can we make this a relative path?
+        checksum = get_filehash(wordlist_all_usernames_path),
+        size     = 0,
+    )    
+
+    # All Customers
+    wordlist_all_customers_path = 'hashview/control/wordlists/dynamic-customers.txt'
+    with open(wordlist_all_customers_path, mode='w'):
+        # 'w' => open for writing, truncating the file first
+        pass
+    wordlist_all_customers = Wordlists(
+        name     = '(Dynamic) All Customers',
+        owner_id = 1,
+        type     = 'dynamic',
+        path     = wordlist_all_customers_path,               # Can we make this a relative path?
+        checksum = get_filehash(wordlist_all_customers_path),
+        size     = 0,
+    )    
+    db.session.add(wordlist_all_recovered_hashes)
+    db.session.add(wordlist_all_usernames)
+    db.session.add(wordlist_all_customers)
     db.session.commit()
 
 

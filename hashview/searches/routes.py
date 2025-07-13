@@ -18,6 +18,7 @@ def searches_list():
     customers = Customers.query.all()
     hashfiles = Hashfiles.query.all()
     search_form = SearchForm()
+    redacted_data = False
     # TODO
     # We should be able to include Customers and Hashfiles in the following queries
     if search_form.validate_on_submit():
@@ -32,9 +33,12 @@ def searches_list():
             return redirect(url_for('searches.searches_list'))
     elif request.args.get("hash_id"):
         results = db.session.query(Hashes, HashfileHashes).join(HashfileHashes, Hashes.id == HashfileHashes.hash_id).filter(Hashes.id == request.args.get("hash_id"))
-        if results.first(): #Without a value in the search input the export button will not pass the form validation
+        if(results.first()): #Without a value in the search input the export button will not pass the form validation
             search_form.query.data = results.first()[0].ciphertext #All hashs should be the same, so set the search input as the first rows hash value
             search_form.search_type.data = 'hash' #Set the search type to hash
+        else:
+            results = db.session.query(Hashes).filter(Hashes.id == request.args.get("hash_id")).all() #This is a hack to get the hash id to show up in the result
+            redacted_data = True #This is a hack to get the hash id to show up in the result            
     else:
         customers = None
         results = None
@@ -44,7 +48,7 @@ def searches_list():
     if results and "export" in request.form: #Export Results
         return export_results(customers, results, hashfiles, search_form.export_type.data)
 
-    return render_template('search.html', title='Search', searchForm=search_form, customers=customers, results=results, hashfiles=hashfiles )
+    return render_template('search.html.j2', title='Search', searchForm=searchForm, customers=customers, results=results, hashfiles=hashfiles, redacted_data=redacted_data)
 
 #Creating this in memory instead of on disk to avoid any extra cleanup. This can be changed later if files get too large
 def export_results(customers, results, hashfiles, separator):
