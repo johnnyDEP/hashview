@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, redirect, request, send_from_directory, current_app, url_for
-from hashview.models import Agents, JobTasks, Tasks, Wordlists, Rules, Jobs, Hashes, Hashfiles, HashfileHashes, Users, HashNotifications, Settings
+from hashview.models import Agents, JobTasks, Tasks, Wordlists, Rules, Jobs, Hashes, Hashfiles, HashfileHashes, Users, HashNotifications, Settings, Customers
 from hashview.utils.utils import save_file, get_md5_hash, update_dynamic_wordlist, update_job_task_status, send_email, send_pushover, notify_admins
 from hashview.models import db
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -669,3 +669,116 @@ def v1_api_error():
         'msg': 'OK'
         }
     return jsonify(message)
+
+@api.route('/v1/agents', methods=['GET'])
+def v1_api_get_agents():
+    """Return a list of all agents (id, name, status, last_checkin). Requires user authentication."""
+    if not is_authorized(user=True, agent=False, request=request):
+        return redirect("/v1/not_authorized")
+
+    update_heartbeat(request.cookies.get('uuid'))
+    agents = Agents.query.all()
+    agent_list = []
+    for agent in agents:
+        agent_list.append({
+            'id': agent.id,
+            'name': agent.name,
+            'status': agent.status,
+            'last_checkin': str(agent.last_checkin),
+        })
+    return jsonify({'status': 200, 'agents': agent_list})
+
+@api.route('/v1/jobs', methods=['GET'])
+def v1_api_get_jobs():
+    """Return a list of jobs (with tasks), filtered by status (running or queued). Requires user authentication."""
+    if not is_authorized(user=True, agent=False, request=request):
+        return redirect("/v1/not_authorized")
+
+    update_heartbeat(request.cookies.get('uuid'))
+    status = request.args.get('status')
+    if status:
+        jobs = Jobs.query.filter_by(status=status.capitalize()).all()
+    else:
+        jobs = Jobs.query.all()
+    job_list = []
+    for job in jobs:
+        job_tasks = JobTasks.query.filter_by(job_id=job.id).all()
+        tasks = []
+        for task in job_tasks:
+            tasks.append({
+                'id': task.id,
+                'name': Tasks.query.get(task.task_id).name if task.task_id else None,
+                'status': task.status,
+                'agent_id': task.agent_id,
+                'recovered': getattr(task, 'recovered', None),
+                'rate': getattr(task, 'rate', None),
+                'est': getattr(task, 'est', None),
+                'control': task.status == 'Running',
+            })
+        job_list.append({
+            'id': job.id,
+            'name': job.name,
+            'status': job.status,
+            'customer_id': job.customer_id,
+            'owner_id': job.owner_id,
+            'tasks': tasks,
+        })
+    return jsonify({'status': 200, 'jobs': job_list})
+
+@api.route('/v1/dashboard/analytics', methods=['GET'])
+def v1_api_dashboard_analytics():
+    """Return chart data for dashboard (passwords recovered over time). Requires user authentication."""
+    if not is_authorized(user=True, agent=False, request=request):
+        return redirect("/v1/not_authorized")
+
+    update_heartbeat(request.cookies.get('uuid'))
+    # Example: count cracked passwords per day for the last 7 days
+    from datetime import datetime, timedelta
+    days = 7
+    labels = []
+    values = []
+    for i in range(days-1, -1, -1):
+        day = datetime.now() - timedelta(days=i)
+        label = day.strftime('%a')  # e.g., 'Mon', 'Tue', ...
+        count = Hashes.query.filter(
+            Hashes.cracked == 1,
+            Hashes.recovered_at >= day.replace(hour=0, minute=0, second=0, microsecond=0),
+            Hashes.recovered_at < day.replace(hour=23, minute=59, second=59, microsecond=999999)
+        ).count()
+        labels.append(label)
+        values.append(count)
+    return jsonify({'status': 200, 'labels': labels, 'values': values})
+
+@api.route('/v1/users', methods=['GET'])
+def v1_api_get_users():
+    """Return a list of all users (id, first_name, last_name, admin). Requires user authentication."""
+    if not is_authorized(user=True, agent=False, request=request):
+        return redirect("/v1/not_authorized")
+
+    update_heartbeat(request.cookies.get('uuid'))
+    users = Users.query.all()
+    user_list = []
+    for user in users:
+        user_list.append({
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'admin': getattr(user, 'admin', False),
+        })
+    return jsonify({'status': 200, 'users': user_list})
+
+@api.route('/v1/customers', methods=['GET'])
+def v1_api_get_customers():
+    """Return a list of all customers (id, name). Requires user authentication."""
+    if not is_authorized(user=True, agent=False, request=request):
+        return redirect("/v1/not_authorized")
+
+    update_heartbeat(request.cookies.get('uuid'))
+    customers = Customers.query.all()
+    customer_list = []
+    for customer in customers:
+        customer_list.append({
+            'id': customer.id,
+            'name': customer.name,
+        })
+    return jsonify({'status': 200, 'customers': customer_list})

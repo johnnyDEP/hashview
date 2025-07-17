@@ -18,34 +18,42 @@
                 <div class="collapse navbar-collapse" id="navbarToggle">
                     <div class="navbar-nav ml-auto">
                         {% if current_user.is_authenticated %}
+                        <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Dashboard</a>
                         <a class="nav-item nav-link" href="{{ url_for('jobs.jobs_list') }}">Jobs</a>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" id="tasksDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Tasks
                             </a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <div class="dropdown-menu" aria-labelledby="tasksDropdown">
                                 <a class="dropdown-item" href="{{ url_for('tasks.tasks_list') }}">Tasks</a>
                                 <a class="dropdown-item" href="{{ url_for('task_groups.task_groups_list') }}">Task Groups</a>
                             </div>
                         </li>
+                        <a class="nav-item nav-link" href="{{ url_for('hashfiles.hashfiles_list') }}">Hashfiles</a>
+                        <a class="nav-item nav-link" href="{{ url_for('rules.rules_list') }}">Rules</a>
+                        <a class="nav-item nav-link" href="{{ url_for('wordlists.wordlists_list') }}">Wordlists</a>
+                        <a class="nav-item nav-link" href="{{ url_for('analytics.get_analytics') }}">Analytics</a>
+                        <a class="nav-item nav-link" href="{{ url_for('searches.searches_list') }}">Search</a>
+                        <a class="nav-item nav-link" href="{{ url_for('notifications.notifications_list') }}">Notifications</a>
+                        <a class="nav-item nav-link" href="{{ url_for('wrapped.wrapped_list') }}">Wrapped</a>
+                        {% if current_user.admin %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Manage
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Admin
                             </a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                {% if current_user.admin %}
+                            <div class="dropdown-menu" aria-labelledby="adminDropdown">
                                 <a class="dropdown-item" href="{{ url_for('customers.customers_list') }}">Customers</a>
                                 <a class="dropdown-item" href="{{ url_for('agents.agents_list') }}">Agents</a>
                                 <a class="dropdown-item" href="{{ url_for('settings.settings_list') }}">Settings</a>
                                 <a class="dropdown-item" href="{{ url_for('users.users_list') }}">User Accounts</a>
-                                <div class="dropdown-divider"></div>
-                                {% endif %}
-                                <a class="dropdown-item" href="{{ url_for('analytics.get_analytics') }}">Analytics</a>
-                                <a class="dropdown-item" href="{{ url_for('searches.searches_list') }}">Search</a>
-                                <a class="dropdown-item" href="{{ url_for('wordlists.wordlists_list') }}">Wordlists</a>
-                                <a class="dropdown-item" href="{{ url_for('hashfiles.hashfiles_list' )}}">Hashfiles</a>
-                                <a class="dropdown-item" href="{{ url_for('rules.rules_list') }}">Rules</a>
-                                <a class="dropdown-item" href="{{ url_for('notifications.notifications_list') }}">Notifications</a>
+                            </div>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Account
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="profileDropdown">
                                 <a class="dropdown-item" href="{{ url_for('users.profile') }}">Profile</a>
                                 <a class="dropdown-item" href="{{ url_for('users.logout') }}">Logout</a>
                             </div>

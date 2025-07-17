@@ -1,4 +1,4 @@
-podm# Backend Skeleton
+# Backend Skeleton
 
 This directory contains the backend skeleton for a generic data enrichment pipeline, inspired by the Nemesis architecture.
 

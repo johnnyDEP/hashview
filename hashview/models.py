@@ -158,9 +158,9 @@ class HashfileHashes(db.Model):
     """Class object to represent HashfileHashes"""
 
     id = db.Column(db.Integer, primary_key=True)
-    hash_id = db.Column(db.Integer, nullable=False, index=True)
+    hash_id = db.Column(db.Integer, db.ForeignKey('hashes.id'), nullable=False, index=True)
     username = db.Column(db.String(256), nullable=True, default=None, index=True)
-    hashfile_id = db.Column(db.Integer, nullable=False)
+    hashfile_id = db.Column(db.Integer, db.ForeignKey('hashfiles.id'), nullable=False)
 
 class Agents(db.Model):
     """Class object to represent Agents"""

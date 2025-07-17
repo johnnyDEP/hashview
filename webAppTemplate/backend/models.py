@@ -75,6 +75,9 @@ class Task(Base):
     hc_attackmode = Column(String(25), nullable=False)
     owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     wl_id = Column(Integer)
+    wl_id_2 = Column(Integer)  # Added for legacy compatibility
+    j_rule = Column(String(25))  # Added for legacy compatibility
+    k_rule = Column(String(25))  # Added for legacy compatibility
     rule_id = Column(Integer)
     hc_mask = Column(String(50))
 
@@ -119,6 +122,9 @@ class Hash(Base):
     hash_type = Column(Integer, nullable=False)
     cracked = Column(Boolean, nullable=False)
     plaintext = Column(String(256))
+    recovered_at = Column(DateTime, nullable=True)  # Added for dashboard analytics
+    task_id = Column(Integer, ForeignKey('tasks.id'), nullable=True)  # Added to track which task cracked the hash
+    recovered_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # Added for legacy compatibility
 
 class HashfileHash(Base):
     __tablename__ = 'hashfilehashes'

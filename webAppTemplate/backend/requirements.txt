@@ -9,4 +9,5 @@ python-multipart
 SQLAlchemy
 asyncpg
 psycopg2-binary 
-alembic 
+alembic
+email-validator 
